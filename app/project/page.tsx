@@ -1,7 +1,7 @@
 import React from "react";
 import Script from "next/script";
-import "../../public/project/styles.css";
-import "../../public/project/responsive.css";
+import "./styles.css";
+import "./responsive.css";
 
 export default function ProjectPage() {
   return (
