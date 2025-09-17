@@ -1,0 +1,442 @@
+@font-face {
+  font-family: 'myFont';
+  src: url('/fonts/charter/webfonts/charter_regular-webfont.eot');
+  src: url('/fonts/charter/webfonts/charter_regular-webfont.eot?#iefix') format('embedded-opentype'),
+       url('/fonts/charter/webfonts/charter_regular-webfont.woff') format('woff');
+}
+html, header, body, footer{
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    background-color: #F4F4F4;
+    box-sizing: border-box;
+}
+#header{
+    background-color: #F4F4F4;
+}
+.header_responsive {
+    font-family: 'myFont';
+    background-color: #F4F4F4;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+	margin: 0px 34px;
+	height: 75px;
+}
+.header-contents{
+    width: 100%;
+    max-width: 1152px;
+    justify-content: space-between;
+	align-items: center;
+}
+.navbar-brand img{
+	width: 132px;
+	height: 18px;
+	float: left;
+	padding: 16px 0px;
+
+}
+.navbar-links{
+    display: flex;
+    gap: 12px;
+    float: right;
+}
+.navbar-links a {
+    text-decoration: none;
+    color: grey;
+    font-size: 18px;
+	padding: 16px 20px;
+}
+.navbar-links a:hover {
+    color: black;
+}
+.header-container{
+    align-items: center;
+    justify-content: center;
+    background-color: #F4F4F4;
+    margin-top: 0;
+    text-align: center;
+}
+.header-container h2{
+    font-size: 34px;
+    font-weight: 700;
+    font-family: 'myFont';
+}
+.main-container{
+    padding: 64px 34px 64px 34px;
+    display: flex;
+    background-color: #F4F4F4;
+	justify-content: center;
+    font-family: 'myFont';
+}
+.main-content{
+    align-items: flex-start;
+    display: flex;
+    margin: 0;
+    width: 100%;
+    max-width: 1152px;
+	gap: 24px;
+	justify-content: center;
+}
+.main-content-left {
+    display: grid;
+    width: 75%;
+    gap: 24px;
+    grid-template-columns: repeat(3, 1fr);
+    justify-content: space-around;
+    align-items: start;
+}
+.blog-image{
+    width: 100%;
+    height: 207px;
+    object-fit: fill;
+}
+.Frame-33{
+    background-color: #ffffff;
+    font-family: 'myFont';
+    width: 100%;
+    max-width: 266px;   /* batas lebar ideal */
+    min-width: 266px; 
+    height: auto;
+    max-height: 552px;
+    cursor: pointer;
+    margin: 0 auto;
+    transition: 0.1s;
+}
+.blog-card{
+    background-color: #ffffff;
+    font-family: 'myFont';
+    width: 100%;
+    max-width: 266px;   /* batas lebar ideal */
+    min-width: 266px; 
+    height: auto;
+    max-height: 552px;
+    cursor: pointer;
+    margin: 0 auto;
+    transition: 0.1s;
+}
+.article-content{
+	padding: 24px;
+	gap: 14px;
+	display: grid;
+}
+.article-content .excerpt {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+  max-height: 7rem;   /* batasi maksimal 3 baris */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;          /* aktifkan flex box model untuk teks */
+  -webkit-box-orient: vertical;  /* orientasi vertikal */
+  -webkit-line-clamp: 4;         /* potong setelah 4 baris */
+  overflow: hidden; 
+}
+
+.article-content .excerpt p {
+  margin: 0;          /* hilangkan margin bawaan Froala */
+  display: inline;    /* jangan bikin line break tambahan */
+}
+.tag-date-content{
+	gap: 10px;
+	display: flex;
+	flex-wrap: wrap;
+}
+.Frame-33 .tag{
+    border-radius: 32px;
+    border: 1px solid grey;
+    font-size: 12px;
+    font-weight: 400;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 156px;
+    height: 29px;
+}
+.blog-card .tag{
+    border-radius: 32px;
+    border: 1px solid grey;
+    font-size: 12px;
+    font-weight: 400;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 156px;
+    height: 29px;
+}
+.Frame-33 .date{
+    border-radius: 32px;
+    border: 1px solid grey;
+    font-size: 12px;
+    font-weight: 400;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 109px;
+    height: 29px;
+}
+.blog-card .date{
+    border-radius: 32px;
+    border: 1px solid grey;
+    font-size: 12px;
+    font-weight: 400;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 109px;
+    height: 29px
+}
+.Frame-33 p{
+    font-weight: 400;
+    font-size: 16px;
+    color: black;
+	margin:0;
+}
+.blog-card p{
+    font-weight: 400;
+    font-size: 16px;
+    color: black;
+	margin:0;
+}
+.Frame-33 h2{
+    font-size: 20px;
+    font-weight: 700;
+    color: black;
+	margin: 0;
+}
+.blog-card h2{
+    font-size: 20px;
+    font-weight: 700;
+    color: black;
+	margin: 0;
+}
+.Frame-33:hover{
+    box-shadow: 0 0 10px rgb(38, 24, 235);
+}
+.blog-card:hover{
+    box-shadow: 0 0 10px rgb(38, 24, 235);
+}
+.main-content-right{
+    width: 25%;
+    justify-content: center;
+	display: grid;
+	gap: 48px;
+}
+.Frame-39{
+    width: 100%;
+    max-width: 270px;
+    height: 100%;
+    max-height: 352px;
+}
+.category-menu{
+    width: 100%;
+    height: 100%;
+}
+.category-menu a{
+	background-color: #ffffff;
+	color: rgba(0, 0, 0, 0.75);
+	display: block;
+	padding: 10px;
+	text-decoration: none;
+	padding-top: 14px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+}
+.category-menu a:hover {
+  background-color: #5D1FF2;
+  color: white;
+}
+.category-menu a.active {
+  background-color: #000000;
+  color: white;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  padding-top: 14px;
+}
+.Frame-53 h2{
+    font-style: 24px;
+    font-weight: 400;
+}
+.Frame-48{
+    width: auto;
+    height: 164px;
+    background-color: white;
+    margin-bottom: 10px;
+    padding-top: 14px;
+    padding-left: 14px;
+    cursor: pointer;
+    transition: 0.1s;
+}
+.Frame-48:hover{
+    box-shadow:  0 0 10px rgb(38, 24, 235);
+}
+.Frame-48 .tag{
+    border-radius: 32px;
+    border: 1px solid grey;
+    font-size: 12px;
+    font-weight: 400;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+    width: 156px;
+    height: 29px;
+}
+.Frame-48 .date{
+    border-radius: 32px;
+    border: 1px solid grey;
+    font-size: 12px;
+    font-weight: 400;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+    width: 109px;
+    height: 29px;
+}
+.Frame-48 h2{
+    font-size: 16px;
+    font-weight: 400;
+}
+small {
+    font-size: 12px;
+}
+p {
+    font-weight: 400;
+    font-size: 16px;
+    color: black;
+    margin: 0;
+    line-height: 150%;
+}
+h1 {
+    font-size: 34px;
+    position: relative;
+	margin: 0;
+	font-weight: normal;
+}
+h2 {
+    font-size: 30px;
+    position: relative;
+	margin: 0;
+	font-weight: normal;
+}
+h3 {
+    font-size: 24px;
+    color: black;
+    margin: 0;
+    line-height: 120%;
+}
+.owner-identity{
+    font-family: 'myFont';
+    position: relative;
+}
+.owner-identity p{
+    font-weight: 400;
+	margin: 0;
+}
+.footer-container{
+	display: flex;
+    background-color: white;
+    font-family: 'myFont';
+    height: 240px;
+    overflow-y: hidden;
+    overflow-x: hidden;
+	justify-content: center;
+	align-items: center;
+	padding: 34px;
+}
+.footer-content{
+	height: fit-content;
+	display: flex;
+	max-width: 1152px;
+	width: 100%;
+	gap: 24px;
+	align-items: center;
+    justify-content: space-between;
+	flex-wrap: wrap;
+}
+.footer-links {
+    display: flex;
+	max-width: 465px;
+	text-align: center;
+    justify-content: space-between;
+	gap: 24px;
+}
+.footer-links a {
+    text-decoration: none;
+    color: grey;
+}
+.lets-connect {
+    text-align: right;
+    position: relative;
+}
+.lets-connect p{
+    font-weight: 400;
+    margin: 0px;
+}
+.lets-connect h2{
+    margin: 0px;
+}
+/* ... (semua isi style.css & responsive.css Anda, sama persis) ... */
+
+/* responsive tetap sama */
+@media (max-width: 1024px) {
+    .main-content{
+        width: 956px;
+        gap: 16px;
+    }
+    .main-content-left{
+        gap: 16px;
+		width:  66.6%
+    }
+	.main-content-right{
+        gap: 16px;
+		width:  33.3%
+    }
+    .Frame-33 h2{
+        font-size: 16px;
+        font-weight: 700;
+    }
+}
+@media (max-width: 430px){
+    .main-content-left{
+        display: grid;
+        background-color: #F4F4F4;
+        gap: 24px;
+        grid-template-columns: 1fr;
+		margin-right: 0;
+		justify-content: center;
+		padding: 0;
+		width: auto;
+    }
+    .main-content-right{
+        display: none;
+    }
+    .Frame-33{
+        max-width: none;
+    }
+    .navbar-links {
+        display: none;
+	}
+    .footer-container{
+        flex-direction: column;
+        gap: 34px;
+        justify-content: left;
+        display: flex;
+        align-items: left;
+    }
+    .footer-content-left{
+        height: 20%;
+        width: 100%;
+    }
+    .footer-content-center{
+        width: 100%;
+    }
+    .footer-container-right{
+       width: 100%;
+    }
+	.header_responsive {
+	margin: 0px 24px;
+	}
+}
