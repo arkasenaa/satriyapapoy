@@ -59,6 +59,7 @@ html, header, body{
     width: 100%;
     justify-content: center;
     padding: 32px 0px;
+    margin: 0 auto;
 }
 .content{
     width: 100%;
@@ -67,6 +68,7 @@ html, header, body{
     display: flex;
     flex-direction: column;
     padding: 0px 34px 0px 34px;
+    margin: 0 auto;
 }
 .header-content{
     width: auto;
@@ -120,14 +122,17 @@ hr.solid {
 	margin-bottom: 20px;
 }
 .main-image{
-    overflow-x: hidden;
-    overflow-y: hidden;
-	margin-bottom: 20px;
+    justify-content: center;
+    display: flex;
 }
-.main-image img{
-    max-width: 100%;
-    height: auto;
-
+.article-body img {
+    max-width: 564px;   /* batas lebar maksimal */
+    max-height: 318px;  /* batas tinggi maksimal */
+    width: 100%;        /* biar skalanya tetap proporsional */
+    height: auto;       /* jaga rasio */
+    display: block;
+    margin: 20px auto;  /* center di tengah + jarak atas bawah */
+    object-fit: cover;  /* kalau mau crop biar pas 564x318 */
 }
 small {
     font-size: 14px;
@@ -183,10 +188,13 @@ h4 {
 }
 .blog-post-content-cards{
     display: flex;
+    flex-wrap: wrap;         /* biar card turun ke bawah kalau sempit */
+    justify-content: center;
     width: 100%;
     max-width: 1152px;
     gap: 24px;
 	padding: 10px;
+    margin: 0 auto;
 }
 .content-tags{
 	width: 100%;

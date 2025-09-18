@@ -1,14 +1,42 @@
+"use client";
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import Head from "next/head";
+import Script from "next/script";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function HomePage() {
+
+  const [latestPosts, setLatestPosts] = useState<any[]>([]);
+
+useEffect(() => {
+  const fetchLatest = async () => {
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    if (error) {
+      console.error("Error fetching latest posts:", error.message);
+    } else {
+      setLatestPosts(data);
+    }
+  };
+
+  fetchLatest();
+}, []);
+
   return (
     <>
-      <head>
+      <Head>
         <title>Satriya Papoy</title>
-        <script
-          src="https://kit.fontawesome.com/222af2bd60.js"
-          crossOrigin="anonymous"
-          async
-        ></script>
-      </head>
+      </Head>
 
       {/* Header */}
       <header>
@@ -43,15 +71,19 @@ export default function HomePage() {
                 and digital media industry since 2016. When 2020, Papoy bridged
                 the gap between his passion and a new field that he was starting
                 to explore: business.
-              </p>              
-                <div className="Read-More-Header">
+              </p>
+              <div className="Read-More-Header">
                 <a href="#">
-                  Read more <i className="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                  Read more{" "}
+                  <i
+                    className="fas fa-arrow-right"
+                    aria-hidden="true"
+                  ></i>
                 </a>
-              </div>
               </div>
             </div>
           </div>
+        </div>
       </section>
 
       {/* Business Section */}
@@ -74,7 +106,8 @@ export default function HomePage() {
               100% organic cotton &amp; good vibes
             </p>
             <a href="#" className="read-more-btn">
-              Read More <i className="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              Read More{" "}
+              <i className="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
           </div>
 
@@ -87,7 +120,8 @@ export default function HomePage() {
               pekerja, dan perantau di Jakarta, dan Jawa Barat
             </p>
             <a href="#" className="read-more-btn">
-              Read More <i className="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              Read More{" "}
+              <i className="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
           </div>
 
@@ -100,7 +134,8 @@ export default function HomePage() {
               like, dan komentar.
             </p>
             <a href="#" className="read-more-btn">
-              Read More <i className="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              Read More{" "}
+              <i className="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
           </div>
 
@@ -111,7 +146,8 @@ export default function HomePage() {
               Hambali Farm menyediakan hewan qurban unggul dengan harga terbaik
             </p>
             <a href="#" className="read-more-btn">
-              Read More <i className="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              Read More{" "}
+              <i className="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
           </div>
         </div>
@@ -130,26 +166,38 @@ export default function HomePage() {
           </div>
 
           <div className="blog-post-content-cards">
-            {[1, 2, 3].map((i) => (
-              <div className="Frame-33" key={i}>
-                <img src="/grey2.jpg" alt="" className="blog-image" />
-                <div className="description">
-                  <div className="tag-date-content">
-                    <span className="tag">Digital Transformation</span>
-                    <span className="date">20 April 2023</span>
-                  </div>
-                  <h2>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit
-                  </h2>
-                  <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                    Suspendisse pellentesque felis augue, a volutpat justo
-                    imperdiet non
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+  {latestPosts.map((post) => (
+    <div
+      className="Frame-33"
+      key={post.id}
+      onClick={() => (window.location.href = `/blog-post/${post.id}`)}
+    >
+      <img
+        src={post.cover_url || "/grey2.jpg"}
+        alt={post.title}
+        className="blog-image"
+      />
+      <div className="description">
+        <div className="tag-date-content">
+          <span className="tag">{post.category || "Uncategorized"}</span>
+          <span className="date">
+            {new Date(post.created_at).toLocaleDateString("id-ID", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+        </div>
+        <h2>{post.title}</h2>
+        <p>
+          {post.excerpt ||
+            post.content?.replace(/<[^>]+>/g, "").slice(0, 100) + "..."}
+        </p>
+      </div>
+    </div>
+  ))}
+  {latestPosts.length === 0 && <p>No blog posts yet.</p>}
+</div>
         </div>
       </footer>
 
