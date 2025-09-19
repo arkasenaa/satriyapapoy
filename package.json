@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+    "@ckeditor/ckeditor5-react": "^11.0.0",
+    "@fortawesome/fontawesome-free": "^7.0.1",
     "@supabase/supabase-js": "^2.57.2",
     "froala-editor": "^4.6.2",
     "next": "15.5.2",
