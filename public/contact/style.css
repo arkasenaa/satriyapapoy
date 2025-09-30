@@ -1,0 +1,254 @@
+@font-face {
+    font-family: 'myFont';
+    src: url('charter/webfonts/charter_regular-webfont.eot');
+    src: url('charter/webfonts/charter_regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('charter/webfonts/charter_regular-webfont.woff') format('woff');
+}
+
+html, header, body, footer {
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, header, body {
+    background-color: #F4F4F4;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+footer {
+    margin: 0;
+    padding: 0;
+}
+p {
+    font-weight: 400;
+    font-size: 16px;
+    color: black;
+    margin: 0;
+    line-height: 150%;
+}
+h1 {
+    font-size: 34px;
+    position: relative;
+	margin: 0;
+	font-weight: normal;
+}
+h2 {
+    font-size: 30px;
+    position: relative;
+	margin: 0;
+	font-weight: normal;
+}
+h3 {
+    font-size: 24px;
+    color: black;
+    margin: 0;
+    line-height: 120%;
+}
+.container {
+    flex: 1;
+}
+
+#header{
+    background-color: #F4F4F4;
+}
+.header_responsive {
+    font-style: 'myFont';
+    background-color: #F4F4F4;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+	margin: 0px 34px;
+	height: 75px;
+}
+.header-contents{
+    width: 100%;
+    max-width: 1152px;
+    justify-content: space-between;
+	align-items: center;
+}
+.navbar-brand img{
+	width: 132px;
+	height: 18px;
+	float: left;
+	padding: 16px 0px;
+
+}
+.navbar-links{
+    display: flex;
+    gap: 12px;
+    float: right;
+}
+.navbar-links a {
+    text-decoration: none;
+    color: grey;
+    font-size: 18px;
+	padding: 16px 20px;
+}
+.navbar-links a:hover {
+    color: black;
+}
+.container {
+    padding: 64px 10px 64px 10px;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
+
+.content-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.main-content{
+    width: 100%;
+    max-width: 1152px;
+    padding: 64px 24px 64px 24px;
+    gap: 28px;
+    display: flex;
+    flex-direction: column;
+}
+.main-content-top {
+    display: flex;
+    max-width: 1152px;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+	gap: 24px;
+}
+
+.main-content-top-left {
+    max-width: 564px;
+    max-height: 69px;
+    width: 100%;
+    height: 100%;
+	min-width: 220px;
+}
+
+.main-content-top-left h2 {
+    font-weight: 400;
+    margin: 0;
+}
+.main-content-top-right p {
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.main-content-bottom {
+    display: flex;
+    max-width: 1152px;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 24px;
+}
+
+.main-content-bottom-left {
+    max-width: 564px;
+    height: 100%;
+}
+
+.main-content-bottom-right {
+    max-height: 35px;
+    height: 100%;
+    gap: 28px;
+}
+
+.main-content-bottom-right img {
+    width: 35px;
+    height: 35px;
+}
+
+.social-icons {
+    gap: 28px;
+    display: flex;
+	justify-content: end;
+}
+
+.contact-info {
+    display: flex;
+    align-items: center;
+	gap: 24px;
+	flex-wrap: wrap;
+}
+
+.contact-info button {
+    padding: 10px 20px;
+    border: 1px solid #000;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 1em;
+    transition: 0.3s;
+	text-wrap: nowrap;
+}
+
+.contact-info button:hover {
+    color: white;
+    background-color: black;
+}
+
+.contact-info .download-cv {
+    background-color: #000;
+    color: #fff;
+    transition: 0.3s;
+}
+
+.contact-info .download-cv:hover {
+    background-color: white;
+    color: black;
+}
+
+.footer-container{
+	display: flex;
+    background-color: white;
+    height: 240px;
+    overflow-y: hidden;
+    overflow-x: hidden;
+	justify-content: center;
+	align-items: center;
+	padding: 34px;
+}
+.footer-content{
+	height: fit-content;
+	display: flex;
+	max-width: 1152px;
+	width: 100%;
+	gap: 24px;
+	align-items: center;
+    justify-content: space-between;
+	flex-wrap: wrap;
+}
+.footer-links {
+    display: flex;
+	max-width: 465px;
+	text-align: center;
+    justify-content: space-between;
+	gap: 24px;
+}
+.footer-links a {
+    text-decoration: none;
+    color: grey;
+}
+.lets-connect {
+    text-align: right;
+    position: relative;
+}
+.lets-connect p{
+    font-weight: 400;
+    margin: 0px;
+}
+.lets-connect h2{
+    margin: 0px;
+}

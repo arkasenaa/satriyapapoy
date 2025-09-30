@@ -1,0 +1,78 @@
+@media (max-width: 1024px) {
+    .row {
+        width: 100%; /* Membuat lebar .row fleksibel agar sesuai dengan kontainer induk */
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Dua kolom dengan lebar yang sama */
+        grid-gap: 24px;
+        overflow-x: hidden;
+        justify-content: center; /* Pusatkan grid dalam kontainer */
+    }
+    .row .ContentWrapper {
+        padding-left: 0;
+        width: 100%; /* Membuat lebar .ContentWrapper fleksibel */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .row .imgWrapper {
+        display: flex;
+        justify-content: center; /* Pusatkan gambar di dalam kolom */
+    }
+    .row .imgWrapper img {
+        width: 100%;
+        max-width: 564px; /* Membatasi lebar gambar agar tidak melebihi 564px */
+        height: auto;
+    }
+    .Frame-28{
+        overflow-x: scroll;
+        overflow-y: hidden;
+        display: flex;
+    }
+}
+
+@media (max-width: 586px) {
+	.footer-content{
+	display: grid;
+	}
+	.lets-connect {
+    text-align: left;
+    position: relative;
+	}	
+}
+
+@media (max-width: 430px) {
+	.welcome_text {
+	padding: 34px 24px;	
+	}
+    .row {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+    }
+    .row .imgWrapper img {
+        height: auto;
+    }
+    .row .ContentWrapper {
+        width: 100%;
+    }
+    .row .ContentWrapper h2{
+        font-size: 32px;
+    }
+    .navbar-links {
+        display: none;
+	}
+	.Frame-12{
+	padding: 64px 24px;
+	}
+	.blog-post-container{
+    padding: 64px 24px 64px 24px;
+	}
+	.footer-container {
+    padding: 24px;
+	}
+	.header_responsive {
+	margin: 0px 24px;
+	}
+}
