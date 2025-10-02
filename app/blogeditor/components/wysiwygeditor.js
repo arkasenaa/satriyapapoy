@@ -13,13 +13,14 @@ import "./wysiwygeditor.css";
 export default function WYSIWYGEditor({ value = "", onChange }) {
   const editorRef = useRef(null);
   const [html, setHtml] = useState(value);
+  const savedRange = useRef(null);
 
   // isi awal & sync dengan prop value
   useEffect(() => {
-    if (editorRef.current) {
+    if (editorRef.current && value !== html) {
       editorRef.current.innerHTML = value || "";
+      setHtml(value || "");
     }
-    setHtml(value || "");
   }, [value]);
 
   // kirim data ke parent setiap html berubah
@@ -27,20 +28,124 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
     if (onChange) onChange(html);
   }, [html, onChange]);
 
-  const exec = (command, value = null) => {
-    document.execCommand(command, false, value);
-    if (editorRef.current) {
-      setHtml(editorRef.current.innerHTML);
+  // simpan selection
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      savedRange.current = sel.getRangeAt(0).cloneRange();
     }
   };
 
-  // upload image lokal
+  // restore selection
+  const restoreSelection = () => {
+    const sel = window.getSelection();
+    if (savedRange.current) {
+      sel.removeAllRanges();
+      sel.addRange(savedRange.current);
+    }
+  };
+
+  // caret ke akhir
+  const setCaretToEnd = (el) => {
+    if (!el) return;
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    savedRange.current = range;
+  };
+
+  const exec = (command, value = null, forceEnd = false) => {
+    saveSelection();
+    document.execCommand(command, false, value);
+    if (editorRef.current) {
+      setHtml(editorRef.current.innerHTML);
+      if (forceEnd) {
+        setCaretToEnd(editorRef.current);
+      } else {
+        restoreSelection();
+      }
+    }
+  };
+
+  // cek elemen blok saat ini
+  const getCurrentBlock = () => {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return null;
+    let node = selection.anchorNode;
+    if (node.nodeType === 3) node = node.parentNode;
+    while (node && node !== editorRef.current) {
+      const tag = node.nodeName.toLowerCase();
+      if (["h1", "h2", "h3", "p"].includes(tag)) {
+        return node;
+      }
+      node = node.parentNode;
+    }
+    return null;
+  };
+
+  // toggle heading tanpa harus blok manual
+  const toggleHeading = (tag) => {
+    saveSelection();
+    const block = getCurrentBlock();
+
+    if (block && block.nodeName.toLowerCase() === tag) {
+      // ganti ke <p>
+      const p = document.createElement("p");
+      p.innerHTML = block.innerHTML;
+      block.parentNode.replaceChild(p, block);
+      setHtml(editorRef.current.innerHTML);
+
+      // pindahkan caret ke <p>
+      const range = document.createRange();
+      range.selectNodeContents(p);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      savedRange.current = range;
+    } else {
+      exec("formatBlock", `<${tag}>`);
+    }
+  };
+
+  // ✅ perbaikan: upload image lokal
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      exec("insertImage", reader.result);
+      if (editorRef.current) {
+        // buat elemen img
+        const img = document.createElement("img");
+        img.src = reader.result;
+        img.style.maxWidth = "100%";
+        img.style.height = "auto";
+
+        // insert di posisi caret
+        if (savedRange.current) {
+          restoreSelection();
+          const range = savedRange.current;
+          range.collapse(false);
+          range.insertNode(img);
+
+          // pindahkan caret setelah gambar
+          range.setStartAfter(img);
+          range.collapse(true);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          savedRange.current = range;
+        } else {
+          // kalau tidak ada selection, append saja
+          editorRef.current.appendChild(img);
+        }
+
+        setHtml(editorRef.current.innerHTML);
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -51,8 +156,10 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
     if (!file) return;
     const url = URL.createObjectURL(file);
     if (editorRef.current) {
+      saveSelection();
       editorRef.current.innerHTML += `<video controls src="${url}" style="max-width:100%;"></video>`;
       setHtml(editorRef.current.innerHTML);
+      setCaretToEnd(editorRef.current);
     }
   };
 
@@ -60,7 +167,7 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
   const handleImageByUrl = () => {
     const url = prompt("Masukkan URL gambar:");
     if (url && editorRef.current) {
-      exec("insertImage", url);
+      exec("insertImage", url, true);
     }
   };
 
@@ -70,7 +177,6 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
     if (url && editorRef.current) {
       let embedCode = "";
 
-      // YouTube
       if (url.includes("youtube.com") || url.includes("youtu.be")) {
         let videoId = "";
         try {
@@ -83,7 +189,6 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
         } catch {
           videoId = url.split("v=").pop();
         }
-
         embedCode = `
           <div class="video-wrapper">
             <iframe
@@ -95,10 +200,7 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
               style="width:100%; aspect-ratio:16/9; border:0;"
             ></iframe>
           </div>`;
-      }
-
-      // Vimeo
-      else if (url.includes("vimeo.com")) {
+      } else if (url.includes("vimeo.com")) {
         const videoId = url.split("/").pop();
         embedCode = `
           <div class="video-wrapper">
@@ -110,29 +212,29 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
               style="width:100%; aspect-ratio:16/9; border:0;"
             ></iframe>
           </div>`;
-      }
-
-      // Direct MP4/WEBM
-      else {
+      } else {
         embedCode = `<video controls src="${url}" style="max-width:100%;"></video>`;
       }
 
+      saveSelection();
       editorRef.current.innerHTML += embedCode;
       setHtml(editorRef.current.innerHTML);
+      setCaretToEnd(editorRef.current);
     }
   };
 
   return (
     <div className="editor-container">
-      {/* Toolbar */}
       <div className="toolbar">
         <button onClick={() => exec("bold")}><Bold size={18} /></button>
         <button onClick={() => exec("italic")}><Italic size={18} /></button>
         <button onClick={() => exec("underline")}><Underline size={18} /></button>
         <button onClick={() => exec("strikeThrough")}><Strikethrough size={18} /></button>
-        <button onClick={() => exec("formatBlock", "<h1>")}><Heading1 size={18} /></button>
-        <button onClick={() => exec("formatBlock", "<h2>")}><Heading2 size={18} /></button>
-        <button onClick={() => exec("formatBlock", "<h3>")}><Heading3 size={18} /></button>
+
+        <button onClick={() => toggleHeading("h1")}><Heading1 size={18} /></button>
+        <button onClick={() => toggleHeading("h2")}><Heading2 size={18} /></button>
+        <button onClick={() => toggleHeading("h3")}><Heading3 size={18} /></button>
+
         <button onClick={() => exec("insertUnorderedList")}><List size={18} /></button>
         <button onClick={() => exec("insertOrderedList")}><ListOrdered size={18} /></button>
         <button onClick={() => exec("justifyLeft")}><AlignLeft size={18} /></button>
@@ -143,34 +245,34 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
         <button onClick={() => exec("indent")}><Indent size={18} /></button>
         <button onClick={() => exec("removeFormat")}><Eraser size={18} /></button>
 
-        {/* upload image lokal */}
         <label className="upload-btn">
           <ImageIcon size={18} />
           <input type="file" accept="image/*" hidden onChange={handleImageUpload} />
         </label>
 
-        {/* insert image via link */}
         <button onClick={handleImageByUrl}><LinkIcon size={18} /></button>
 
-        {/* upload video lokal */}
         <label className="upload-btn">
           <Video size={18} />
           <input type="file" accept="video/*" hidden onChange={handleVideoUpload} />
         </label>
 
-        {/* insert video via link */}
         <button onClick={handleVideoByUrl}><LinkIcon size={18} /></button>
       </div>
 
-      {/* Editable Area */}
       <div
         ref={editorRef}
         className="editor"
         contentEditable
         suppressContentEditableWarning={true}
         onInput={() => {
-          if (editorRef.current) setHtml(editorRef.current.innerHTML);
+          if (editorRef.current) {
+            saveSelection();
+            setHtml(editorRef.current.innerHTML);
+          }
         }}
+        onKeyUp={saveSelection}
+        onMouseUp={saveSelection}
       />
     </div>
   );
