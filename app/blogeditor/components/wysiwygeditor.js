@@ -15,18 +15,22 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
   const [html, setHtml] = useState(value);
   const savedRange = useRef(null);
 
-  // isi awal & sync dengan prop value
+  // ⏩ isi awal hanya saat value dari luar berubah (misal load draft)
   useEffect(() => {
     if (editorRef.current && value !== html) {
       editorRef.current.innerHTML = value || "";
       setHtml(value || "");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  // kirim data ke parent setiap html berubah
+  // ⏩ kirim ke parent hanya saat html internal berubah
   useEffect(() => {
-    if (onChange) onChange(html);
-  }, [html, onChange]);
+    if (onChange && html !== value) {
+      onChange(html);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [html]);
 
   // simpan selection
   const saveSelection = () => {
@@ -99,7 +103,6 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
       block.parentNode.replaceChild(p, block);
       setHtml(editorRef.current.innerHTML);
 
-      // pindahkan caret ke <p>
       const range = document.createRange();
       range.selectNodeContents(p);
       range.collapse(false);
@@ -112,27 +115,23 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
     }
   };
 
-  // ✅ perbaikan: upload image lokal
+  // upload image lokal
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       if (editorRef.current) {
-        // buat elemen img
         const img = document.createElement("img");
         img.src = reader.result;
         img.style.maxWidth = "100%";
         img.style.height = "auto";
 
-        // insert di posisi caret
         if (savedRange.current) {
           restoreSelection();
           const range = savedRange.current;
           range.collapse(false);
           range.insertNode(img);
-
-          // pindahkan caret setelah gambar
           range.setStartAfter(img);
           range.collapse(true);
           const sel = window.getSelection();
@@ -140,7 +139,6 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
           sel.addRange(range);
           savedRange.current = range;
         } else {
-          // kalau tidak ada selection, append saja
           editorRef.current.appendChild(img);
         }
 
@@ -268,6 +266,7 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
         onInput={() => {
           if (editorRef.current) {
             saveSelection();
+            // hanya update state tanpa overwrite DOM
             setHtml(editorRef.current.innerHTML);
           }
         }}

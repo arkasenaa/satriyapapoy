@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import Link from "next/link"; 
+import Link from "next/link";
 import "./blogeditor.css";
 
 // ✅ Dynamic import WYSIWYG (SSR aman)
@@ -37,7 +37,8 @@ async function uploadCover(file) {
   return data.publicUrl;
 }
 
-export default function BlogEditor() {
+// 🔹 Komponen inti blog editor (pakai Suspense wrapper)
+function BlogEditorContent() {
   const [title, setTitle] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
   const [coverFile, setCoverFile] = useState(null);
@@ -50,15 +51,16 @@ export default function BlogEditor() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("id");
 
+  // ✅ Cek session login
   useEffect(() => {
-  async function checkSession() {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      router.push(`/login?redirect=${pathname}`);
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        router.push(`/login?redirect=${pathname}`);
+      }
     }
-  }
-  checkSession();
-}, [pathname]);
+    checkSession();
+  }, [pathname, router]);
 
   // ✅ Load drafts
   async function loadDrafts() {
@@ -269,5 +271,14 @@ export default function BlogEditor() {
         </section>
       </div>
     </div>
+  );
+}
+
+// 🔹 Ekspor utama dibungkus Suspense
+export default function BlogEditor() {
+  return (
+    <Suspense fallback={<p>Loading editor...</p>}>
+      <BlogEditorContent />
+    </Suspense>
   );
 }

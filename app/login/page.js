@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import "./login.css"; // pakai CSS hasil migrasi
@@ -10,7 +10,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-export default function LoginPage() {
+// Komponen isi login yang memakai useSearchParams
+function LoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -99,5 +100,14 @@ export default function LoginPage() {
         src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"
       ></script>
     </section>
+  );
+}
+
+// Bungkus dengan Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <LoginContent />
+    </Suspense>
   );
 }
