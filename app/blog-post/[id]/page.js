@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import "./styling.css";   // styling yang Anda sudah kasih
+import "./styling.css";
 import "./responsive2.css";
 
 const supabase = createClient(
@@ -20,34 +20,68 @@ export default function BlogPost() {
 
   useEffect(() => {
     const fetchPost = async () => {
-  const { data, error } = await supabase
-    .from("posts")
-    .select("*")
-    .eq("id", id)
-    .single();
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-  if (error) {
-    console.error(error);
-  } else {
-    setPost(data);
-  }
-};
+      if (error) {
+        console.error(error);
+      } else {
+        let fixedContent = data.content || "";
 
-const fetchLatest = async () => {
-  const { data, error } = await supabase
-    .from("posts")
-    .select("*")
-    .eq("status", "published")
-    .neq("id", id) // exclude artikel yang sedang dibuka
-    .limit(10);
+        // ✅ Pastikan semua <video> punya controls
+        fixedContent = fixedContent.replace(
+          /<video(?![^>]*controls)([^>]*)>/gi,
+          `<video controls$1>`
+        );
 
-  if (error) {
-    console.error("Error fetching latest posts:", error.message);
-  } else {
-    const shuffled = data.sort(() => Math.random() - 0.5).slice(0, 4);
-    setLatest(shuffled);
-  }
-};
+        // ✅ Tangani video tag
+        fixedContent = fixedContent.replace(
+          /<video([^>]*)src="([^"]+)"([^>]*)><\/video>/gi,
+          (match, before, src, after) => {
+            let finalUrl = src;
+
+            // kalau src belum full URL, buatkan public URL dari supabase
+            if (!src.startsWith("http")) {
+              const { data: urlData } = supabase.storage
+                .from("videos")
+                .getPublicUrl(src.startsWith("blog/") ? src : `blog/${src}`);
+              if (urlData?.publicUrl) {
+                finalUrl = urlData.publicUrl;
+              }
+            }
+
+            return `<div class="video-wrapper"><video${before}${after} controls><source src="${finalUrl}" type="video/mp4"></video></div>`;
+          }
+        );
+
+        // ✅ Bungkus iframe (YouTube/Vimeo)
+        fixedContent = fixedContent.replace(
+          /<iframe([^>]*)><\/iframe>/gi,
+          `<div class="video-wrapper"><iframe$1></iframe></div>`
+        );
+
+        setPost({ ...data, content: fixedContent });
+      }
+    };
+
+    const fetchLatest = async () => {
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("status", "published")
+        .neq("id", id)
+        .limit(10);
+
+      if (error) {
+        console.error("Error fetching latest posts:", error.message);
+      } else {
+        const shuffled = data.sort(() => Math.random() - 0.5).slice(0, 4);
+        setLatest(shuffled);
+      }
+    };
 
     fetchPost();
     fetchLatest();
@@ -151,13 +185,13 @@ const fetchLatest = async () => {
                 </span>
                 <h4>{item.title}</h4>
                 <div
-                        className="excerpt"
-                        dangerouslySetInnerHTML={{
-                          __html: post.content
-                            ? post.content.substring(0, 200) + "..."
-                            : "",
-                        }}
-                      />
+                  className="excerpt"
+                  dangerouslySetInnerHTML={{
+                    __html: item.content
+                      ? item.content.replace(/<[^>]+>/g, "").split(" ").slice(0, 20).join(" ") + "..."
+                      : "",
+                  }}
+                />
               </div>
             </div>
           ))}
