@@ -90,7 +90,7 @@ html, header, body, footer{
 .blog-image{
     width: 100%;
     height: 207px;
-    object-fit: fill;
+    object-fit: cover;
 }
 .Frame-33{
     background-color: #ffffff;
