@@ -8,29 +8,37 @@ import {
   Image as ImageIcon, Video, Eraser, Link as LinkIcon
 } from "lucide-react";
 
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
 import "./wysiwygeditor.css";
 
 export default function WYSIWYGEditor({ value = "", onChange }) {
   const editorRef = useRef(null);
   const [html, setHtml] = useState(value);
   const savedRange = useRef(null);
+  const lastValueRef = useRef(value);
 
-  // ⏩ isi awal hanya saat value dari luar berubah (misal load draft)
+  // sinkronisasi dari luar -> editor
   useEffect(() => {
-    if (editorRef.current && value !== html) {
+    if (editorRef.current && value !== lastValueRef.current) {
       editorRef.current.innerHTML = value || "";
       setHtml(value || "");
+      lastValueRef.current = value || "";
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  // ⏩ kirim ke parent hanya saat html internal berubah
+  // panggil ke parent jika html berubah
   useEffect(() => {
-    if (onChange && html !== value) {
+    if (onChange && html !== lastValueRef.current) {
+      lastValueRef.current = html;
       onChange(html);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [html]);
+  }, [html, onChange]);
 
   // simpan selection
   const saveSelection = () => {
@@ -62,6 +70,28 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
     savedRange.current = range;
   };
 
+  // buat paragraf editable kosong setelah node dan letakkan caret di situ
+  const insertEditableParagraphAfter = (node) => {
+    if (!editorRef.current) return;
+    const p = document.createElement("p");
+    p.innerHTML = "<br>";
+    if (node && node.parentNode) {
+      if (node.nextSibling) node.parentNode.insertBefore(p, node.nextSibling);
+      else node.parentNode.appendChild(p);
+    } else {
+      editorRef.current.appendChild(p);
+    }
+
+    const range = document.createRange();
+    range.setStart(p, 0);
+    range.collapse(true);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    savedRange.current = range;
+    return p;
+  };
+
   const exec = (command, value = null, forceEnd = false) => {
     saveSelection();
     document.execCommand(command, false, value);
@@ -75,11 +105,12 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
     }
   };
 
-  // cek elemen blok saat ini
+  // cek block
   const getCurrentBlock = () => {
     const selection = window.getSelection();
-    if (!selection.rangeCount) return null;
+    if (!selection || !selection.rangeCount) return null;
     let node = selection.anchorNode;
+    if (!node) return null;
     if (node.nodeType === 3) node = node.parentNode;
     while (node && node !== editorRef.current) {
       const tag = node.nodeName.toLowerCase();
@@ -91,13 +122,11 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
     return null;
   };
 
-  // toggle heading tanpa harus blok manual
   const toggleHeading = (tag) => {
     saveSelection();
     const block = getCurrentBlock();
 
     if (block && block.nodeName.toLowerCase() === tag) {
-      // ganti ke <p>
       const p = document.createElement("p");
       p.innerHTML = block.innerHTML;
       block.parentNode.replaceChild(p, block);
@@ -118,6 +147,8 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
   // upload image lokal
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
+    // reset input value so same file can be reselected later
+    e.target.value = "";
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
@@ -126,21 +157,16 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
         img.src = reader.result;
         img.style.maxWidth = "100%";
         img.style.height = "auto";
+        img.setAttribute("contentEditable", "false");
 
-        if (savedRange.current) {
-          restoreSelection();
-          const range = savedRange.current;
-          range.collapse(false);
-          range.insertNode(img);
-          range.setStartAfter(img);
-          range.collapse(true);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-          savedRange.current = range;
-        } else {
-          editorRef.current.appendChild(img);
-        }
+        // restore selection then insert
+        restoreSelection();
+        const range = savedRange.current || document.createRange();
+        range.collapse(false);
+        range.insertNode(img);
+
+        // place a paragraph after img and move caret there
+        insertEditableParagraphAfter(img);
 
         setHtml(editorRef.current.innerHTML);
       }
@@ -148,33 +174,91 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
     reader.readAsDataURL(file);
   };
 
-  // upload video lokal
-  const handleVideoUpload = (e) => {
+  // ✅ upload video ke Supabase + insert ke editor (revisi: tanpa tombol hapus, caret tersedia)
+  const handleVideoUpload = async (e) => {
     const file = e.target.files[0];
+    // reset input value so same file can be reselected later
+    e.target.value = "";
     if (!file) return;
-    const url = URL.createObjectURL(file);
+
+    const fileName = `blog/${Date.now()}-${file.name}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("videos")
+      .upload(fileName, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Upload video gagal:", uploadError.message);
+      return;
+    }
+
+    const { data } = supabase.storage.from("videos").getPublicUrl(fileName);
+    const publicUrl = data.publicUrl;
+
     if (editorRef.current) {
       saveSelection();
-      editorRef.current.innerHTML += `<video controls src="${url}" style="max-width:100%;"></video>`;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "video-wrapper";
+      wrapper.style.display = "block";
+      wrapper.style.margin = "1em 0";
+      // biarkan wrapper editable sehingga caret/backspace bisa bekerja normal
+      wrapper.setAttribute("contentEditable", "true");
+      wrapper.setAttribute("data-embedded-video", "true");
+
+      const videoEl = document.createElement("video");
+      videoEl.src = publicUrl;
+      videoEl.controls = true;
+      videoEl.style.maxWidth = "100%";
+      // video element itself non-editable
+      videoEl.setAttribute("contentEditable", "false");
+
+      wrapper.appendChild(videoEl);
+
+      const range = savedRange.current;
+      if (range) {
+        restoreSelection();
+        range.collapse(false);
+        range.insertNode(wrapper);
+      } else {
+        editorRef.current.appendChild(wrapper);
+      }
+
+      // buat paragraf editable setelah video dan letakkan caret di situ
+      insertEditableParagraphAfter(wrapper);
+
       setHtml(editorRef.current.innerHTML);
-      setCaretToEnd(editorRef.current);
     }
   };
 
   // insert image by URL
   const handleImageByUrl = () => {
+    saveSelection();
     const url = prompt("Masukkan URL gambar:");
     if (url && editorRef.current) {
       exec("insertImage", url, true);
     }
   };
 
-  // insert video by URL
+  // insert video by URL (YouTube, Vimeo, MP4) — revisi: buat node programmatically
   const handleVideoByUrl = () => {
+    // penting: simpan selection sebelum prompt supaya tidak hilang
+    saveSelection();
     const url = prompt("Masukkan URL video (YouTube, Vimeo, atau MP4):");
-    if (url && editorRef.current) {
-      let embedCode = "";
+    if (!url || !editorRef.current) return;
 
+    const wrapper = document.createElement("div");
+    wrapper.className = "video-wrapper";
+    wrapper.style.display = "block";
+    wrapper.style.margin = "1em 0";
+    wrapper.setAttribute("contentEditable", "true");
+    wrapper.setAttribute("data-embedded-video", "true");
+
+    // buat node sesuai tipe
+    try {
       if (url.includes("youtube.com") || url.includes("youtu.be")) {
         let videoId = "";
         try {
@@ -185,77 +269,100 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
             videoId = parsedUrl.pathname.split("/").pop();
           }
         } catch {
-          videoId = url.split("v=").pop();
+          // fallback parsing
+          const parts = url.split("v=");
+          videoId = parts.length > 1 ? parts.pop().split("&")[0] : url.split("/").pop();
         }
-        embedCode = `
-          <div class="video-wrapper">
-            <iframe
-              src="https://www.youtube.com/embed/${videoId}?rel=0"
-              title="YouTube video"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-              style="width:100%; aspect-ratio:16/9; border:0;"
-            ></iframe>
-          </div>`;
+
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0`;
+        iframe.title = "YouTube video";
+        iframe.setAttribute("frameborder", "0");
+        iframe.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture");
+        iframe.setAttribute("allowfullscreen", "");
+        iframe.style.width = "100%";
+        iframe.style.aspectRatio = "16/9";
+        iframe.style.border = "0";
+        iframe.setAttribute("contentEditable", "false");
+        wrapper.appendChild(iframe);
       } else if (url.includes("vimeo.com")) {
         const videoId = url.split("/").pop();
-        embedCode = `
-          <div class="video-wrapper">
-            <iframe
-              src="https://player.vimeo.com/video/${videoId}"
-              frameborder="0"
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowfullscreen
-              style="width:100%; aspect-ratio:16/9; border:0;"
-            ></iframe>
-          </div>`;
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://player.vimeo.com/video/${videoId}`;
+        iframe.setAttribute("frameborder", "0");
+        iframe.setAttribute("allow", "autoplay; fullscreen; picture-in-picture");
+        iframe.setAttribute("allowfullscreen", "");
+        iframe.style.width = "100%";
+        iframe.style.aspectRatio = "16/9";
+        iframe.style.border = "0";
+        iframe.setAttribute("contentEditable", "false");
+        wrapper.appendChild(iframe);
       } else {
-        embedCode = `<video controls src="${url}" style="max-width:100%;"></video>`;
+        // anggap mp4 atau direct video link
+        const videoEl = document.createElement("video");
+        videoEl.controls = true;
+        videoEl.src = url;
+        videoEl.style.maxWidth = "100%";
+        videoEl.setAttribute("contentEditable", "false");
+        wrapper.appendChild(videoEl);
       }
-
-      saveSelection();
-      editorRef.current.innerHTML += embedCode;
-      setHtml(editorRef.current.innerHTML);
-      setCaretToEnd(editorRef.current);
+    } catch (err) {
+      console.error("Gagal membuat embed video dari URL:", err);
+      return;
     }
+
+    // masukkan ke editor pada posisi selection (jika ada) atau append
+    const range = savedRange.current;
+    if (range) {
+      restoreSelection();
+      range.collapse(false);
+      range.insertNode(wrapper);
+    } else {
+      editorRef.current.appendChild(wrapper);
+    }
+
+    // buat paragraf editable setelah video dan letakkan caret di situ
+    insertEditableParagraphAfter(wrapper);
+    setHtml(editorRef.current.innerHTML);
   };
 
+  // agar toolbar tidak membuat editor kehilangan fokus/selection saat diklik,
+  // kita gunakan onMouseDown={e => e.preventDefault()} pada tombol toolbar (diterapkan di JSX)
   return (
     <div className="editor-container">
       <div className="toolbar">
-        <button onClick={() => exec("bold")}><Bold size={18} /></button>
-        <button onClick={() => exec("italic")}><Italic size={18} /></button>
-        <button onClick={() => exec("underline")}><Underline size={18} /></button>
-        <button onClick={() => exec("strikeThrough")}><Strikethrough size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("bold")}><Bold size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("italic")}><Italic size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("underline")}><Underline size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("strikeThrough")}><Strikethrough size={18} /></button>
 
-        <button onClick={() => toggleHeading("h1")}><Heading1 size={18} /></button>
-        <button onClick={() => toggleHeading("h2")}><Heading2 size={18} /></button>
-        <button onClick={() => toggleHeading("h3")}><Heading3 size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => toggleHeading("h1")}><Heading1 size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => toggleHeading("h2")}><Heading2 size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => toggleHeading("h3")}><Heading3 size={18} /></button>
 
-        <button onClick={() => exec("insertUnorderedList")}><List size={18} /></button>
-        <button onClick={() => exec("insertOrderedList")}><ListOrdered size={18} /></button>
-        <button onClick={() => exec("justifyLeft")}><AlignLeft size={18} /></button>
-        <button onClick={() => exec("justifyCenter")}><AlignCenter size={18} /></button>
-        <button onClick={() => exec("justifyRight")}><AlignRight size={18} /></button>
-        <button onClick={() => exec("justifyFull")}><AlignJustify size={18} /></button>
-        <button onClick={() => exec("outdent")}><Outdent size={18} /></button>
-        <button onClick={() => exec("indent")}><Indent size={18} /></button>
-        <button onClick={() => exec("removeFormat")}><Eraser size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("insertUnorderedList")}><List size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("insertOrderedList")}><ListOrdered size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("justifyLeft")}><AlignLeft size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("justifyCenter")}><AlignCenter size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("justifyRight")}><AlignRight size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("justifyFull")}><AlignJustify size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("outdent")}><Outdent size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("indent")}><Indent size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={() => exec("removeFormat")}><Eraser size={18} /></button>
 
-        <label className="upload-btn">
+        <label className="upload-btn" onMouseDown={(e) => e.preventDefault()}>
           <ImageIcon size={18} />
           <input type="file" accept="image/*" hidden onChange={handleImageUpload} />
         </label>
 
-        <button onClick={handleImageByUrl}><LinkIcon size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={handleImageByUrl}><LinkIcon size={18} /></button>
 
-        <label className="upload-btn">
+        <label className="upload-btn" onMouseDown={(e) => e.preventDefault()}>
           <Video size={18} />
           <input type="file" accept="video/*" hidden onChange={handleVideoUpload} />
         </label>
 
-        <button onClick={handleVideoByUrl}><LinkIcon size={18} /></button>
+        <button onMouseDown={(e) => e.preventDefault()} onClick={handleVideoByUrl}><LinkIcon size={18} /></button>
       </div>
 
       <div
@@ -266,7 +373,6 @@ export default function WYSIWYGEditor({ value = "", onChange }) {
         onInput={() => {
           if (editorRef.current) {
             saveSelection();
-            // hanya update state tanpa overwrite DOM
             setHtml(editorRef.current.innerHTML);
           }
         }}
