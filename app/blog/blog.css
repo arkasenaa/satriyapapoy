@@ -233,26 +233,41 @@ html, header, body, footer{
     width: 100%;
     height: 100%;
 }
-.category-menu a{
-	background-color: #ffffff;
-	color: rgba(0, 0, 0, 0.75);
-	display: block;
-	padding: 10px;
-	text-decoration: none;
-	padding-top: 14px;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-}
-.category-menu a:hover {
-  background-color: #5D1FF2;
-  color: white;
+.category-menu .category-title {
+  background-color: #000000; /* hitam */
+  color: #ffffff;            /* putih */
+  font-size: 20px;
+  font-weight: 700;          /* bold */
+  padding: 12px 10px;
+  cursor: default;
+  display: block;
 }
 .category-menu a.active {
-  background-color: #000000;
+  background-color: #5D1FF2;
   color: white;
-  font-size: 24px;
-  font-weight: 700;
-  margin: 0;
-  padding-top: 14px;
+  font-size: 18px;
+  font-weight: 400; /* tidak bold */
+}
+.category-menu a{
+  background-color: #ffffff; /* putih */
+  color: rgba(0, 0, 0, 0.75);
+  display: block;
+  padding: 14px 10px;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+  font-size: 18px;
+  font-weight: 400;
+  transition: all 0.1s;
+}
+.category-menu a:hover:not(.category-title) {
+  background-color: #5D1FF2; /* ungu */
+  color: white;
+}
+
+.category-menu a.active {
+  background-color: #5D1FF2; /* ungu */
+  color: white;
+  font-weight: 400; /* tidak bold */
 }
 .Frame-53 h2{
     font-style: 24px;
@@ -378,9 +393,13 @@ h3 {
 .lets-connect h2{
     margin: 0px;
 }
-/* ... (semua isi style.css & responsive.css Anda, sama persis) ... */
-
-/* responsive tetap sama */
+.loading-text, .no-posts {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #555;
+  font-size: 18px;
+  margin-top: 40px;
+}
 @media (max-width: 1024px) {
     .main-content{
         width: 956px;
