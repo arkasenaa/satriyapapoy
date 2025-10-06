@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -38,7 +38,16 @@ async function uploadCover(file) {
   }
 }
 
-export default function BlogEditor() {
+// ✅ Komponen utama dibungkus dalam SuspenseBoundary
+export default function BlogEditorPage() {
+  return (
+    <Suspense fallback={<div className="loading">Loading Editor...</div>}>
+      <BlogEditor />
+    </Suspense>
+  );
+}
+
+function BlogEditor() {
   const [title, setTitle] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
   const [category, setCategory] = useState("Uncategorized");
@@ -52,7 +61,7 @@ export default function BlogEditor() {
   const [autodraftId, setAutodraftId] = useState(null);
 
   // 🆕 Counter untuk "Untitled Blog"
-  const untitledCountRef = useRef(1); 
+  const untitledCountRef = useRef(1);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -133,7 +142,6 @@ export default function BlogEditor() {
     const id = e.target.value;
     setSelectedDraft(id);
 
-    // 🆕 Jika memilih "draft" kosong (kembali ke editor baru)
     if (id === "") {
       setTitle("");
       setCoverUrl("");
@@ -146,12 +154,10 @@ export default function BlogEditor() {
     const draft = drafts.find((d) => d.id == id);
     if (draft) {
       localStorage.removeItem(localKey);
-      // 🆕 Reset isi editor saat draft dipilih
       setTitle("");
       setCoverUrl("");
       setCategory("Uncategorized");
       setContent("");
-      // 🕒 Delay untuk load data draft (agar terlihat "kosong dulu")
       setTimeout(() => {
         setTitle(draft.title);
         setContent(draft.content);
@@ -210,10 +216,8 @@ export default function BlogEditor() {
     restoreAutosave();
   }, [localKey, isPostLoaded, hasRestoredAutosave, editId]);
 
-  // ✅ Callback editor siap
   const handleEditorReady = () => setIsEditorReady(true);
 
-  // ✅ Upload cover segera saat file dipilih
   const handleCoverFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -329,7 +333,6 @@ export default function BlogEditor() {
     }
   }
 
-  // ✅ Reset editor dengan aman
   const handleWriteNew = () => {
     setTitle("");
     setCoverUrl("");
@@ -337,16 +340,12 @@ export default function BlogEditor() {
     setContent("");
     setAutodraftId(null);
     localStorage.removeItem(localKey);
-    // 🆕 increment untitled counter setiap kali blog baru
     untitledCountRef.current += 1;
     if (editId) router.push("/blogeditor");
   };
 
-  // 🆕 Tentukan label draft saat ini di navbar
   const currentDraftLabel =
-    title.trim() !== ""
-      ? title.trim()
-      : `Untitled Blog #${untitledCountRef.current}`;
+    title.trim() !== "" ? title.trim() : `Untitled Blog #${untitledCountRef.current}`;
 
   return (
     <div className="blog-editor-wrapper">
@@ -366,7 +365,6 @@ export default function BlogEditor() {
             </div>
 
             <div className="nav-right">
-              {/* 🆕 Draft dropdown sekarang menampilkan judul blog aktif */}
               <select id="drafts-dropdown" value={selectedDraft} onChange={handleDraftChange}>
                 <option value="">{currentDraftLabel}</option>
                 {drafts.map((draft) => (
@@ -419,7 +417,6 @@ export default function BlogEditor() {
             </select>
           </div>
 
-          {/* ✅ WYSIWYG Editor */}
           <div className="wysiwyg-editor">
             <WYSIWYGEditor
               value={content}
@@ -428,7 +425,6 @@ export default function BlogEditor() {
             />
           </div>
 
-          {/* ✅ Tombol Draft & Publish */}
           <div className="post-btns">
             <button onClick={() => savePost("draft")} className="write-blog draft">
               <i className="ri-edit-box-line"></i>
