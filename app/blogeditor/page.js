@@ -1,10 +1,13 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import "./blogeditor.css";
+
+// Jangan lupa: paksa dynamic rendering agar Next tidak prerender halaman ini
+export const dynamic = "force-dynamic";
 
 // ✅ Dynamic import WYSIWYG (aman untuk SSR)
 const WYSIWYGEditor = dynamic(() => import("./components/wysiwygeditor"), {
@@ -371,117 +374,120 @@ export default function BlogEditor() {
   const metaPlain = metaDescription.replace(/<[^>]+>/g, "");
   const metaCount = metaPlain.length;
 
+  // Bungkus UI dengan Suspense agar Next tidak complain tentang useSearchParams pada prerender
   return (
-    <div className="blog-editor-wrapper">
-      <div className="blog-editor-content">
-        {/* ✅ Navbar */}
-        <header>
-          <div className="nav container">
-            <Link href="/" className="logo">
-              Editor
-            </Link>
+    <Suspense fallback={null}>
+      <div className="blog-editor-wrapper">
+        <div className="blog-editor-content">
+          {/* ✅ Navbar */}
+          <header>
+            <div className="nav container">
+              <Link href="/" className="logo">
+                Editor
+              </Link>
 
-            <div className="nav-right">
-              <button className="write-blog" onClick={handleWriteNew}>
-                <i className="ri-edit-box-line"></i>
-                <span>Write</span>
-              </button>
+              <div className="nav-right">
+                <button className="write-blog" onClick={handleWriteNew}>
+                  <i className="ri-edit-box-line"></i>
+                  <span>Write</span>
+                </button>
+              </div>
+
+              <div className="nav-right">
+                {/* 🆕 Draft dropdown sekarang menampilkan judul blog aktif */}
+                <select id="drafts-dropdown" value={selectedDraft} onChange={handleDraftChange}>
+                  <option value="">{currentDraftLabel}</option>
+                  {drafts.map((draft) => (
+                    <option key={draft.id} value={draft.id}>
+                      {draft.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+          </header>
 
-            <div className="nav-right">
-              {/* 🆕 Draft dropdown sekarang menampilkan judul blog aktif */}
-              <select id="drafts-dropdown" value={selectedDraft} onChange={handleDraftChange}>
-                <option value="">{currentDraftLabel}</option>
-                {drafts.map((draft) => (
-                  <option key={draft.id} value={draft.id}>
-                    {draft.title}
-                  </option>
-                ))}
+          {/* ✅ Form Editor */}
+          <section className="post-create container">
+            <div className="post-inputs">
+              <input type="file" accept="image/*" onChange={handleCoverFileChange} />
+              <input
+                type="text"
+                placeholder="Cover Image URL"
+                value={coverUrl}
+                onChange={(e) => setCoverUrl(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Blog Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="category-selector"
+              >
+                <option value="Uncategorized">Uncategorized</option>
+                <option value="Business Strategy">Business Strategy</option>
+                <option value="Market Research and Analysis">
+                  Market Research and Analysis
+                </option>
+                <option value="Financial Analysis and Modeling">
+                  Financial Analysis and Modeling
+                </option>
+                <option value="Digital Transformation">Digital Transformation</option>
+                <option value="Business Process">Business Process</option>
+                <option value="Leadership & Organizational Development">
+                  Leadership & Organizational Development
+                </option>
+                <option value="Data Analytics & BI">Data Analytics & BI</option>
+                <option value="Reviews">Reviews</option>
+                <option value="Personal Insights">Personal Insights</option>
               </select>
             </div>
-          </div>
-        </header>
 
-        {/* ✅ Form Editor */}
-        <section className="post-create container">
-          <div className="post-inputs">
-            <input type="file" accept="image/*" onChange={handleCoverFileChange} />
-            <input
-              type="text"
-              placeholder="Cover Image URL"
-              value={coverUrl}
-              onChange={(e) => setCoverUrl(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Blog Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="category-selector"
-            >
-              <option value="Uncategorized">Uncategorized</option>
-              <option value="Business Strategy">Business Strategy</option>
-              <option value="Market Research and Analysis">
-                Market Research and Analysis
-              </option>
-              <option value="Financial Analysis and Modeling">
-                Financial Analysis and Modeling
-              </option>
-              <option value="Digital Transformation">Digital Transformation</option>
-              <option value="Business Process">Business Process</option>
-              <option value="Leadership & Organizational Development">
-                Leadership & Organizational Development
-              </option>
-              <option value="Data Analytics & BI">Data Analytics & BI</option>
-              <option value="Reviews">Reviews</option>
-              <option value="Personal Insights">Personal Insights</option>
-            </select>
-          </div>
-
-          {/* ✅ WYSIWYG Editor */}
-          <div className="wysiwyg-editor">
-            <WYSIWYGEditor
-              value={content}
-              onChange={(newContent) => setContent(newContent)}
-              onEditorReady={handleEditorReady}
-            />
-          </div>
-
-          {/* 🆕 Meta description mini editor */}
-          <div className="meta-description-box" style={{ marginTop: 12 }}>
-            <label style={{ display: "block", marginBottom: 6 }}>Meta Description (ditampilkan di card & meta tag):</label>
-            <div className="meta-editor-wrapper" style={{ border: "1px solid #ddd", borderRadius: 6, padding: 8 }}>
-              {/* Re-use WYSIWYGEditor as a mini box; it returns HTML but we strip tags when showing counts */}
+            {/* ✅ WYSIWYG Editor */}
+            <div className="wysiwyg-editor">
               <WYSIWYGEditor
-                value={metaDescription}
-                onChange={(newContent) => setMetaDescription(newContent)}
-                onEditorReady={() => {}}
+                value={content}
+                onChange={(newContent) => setContent(newContent)}
+                onEditorReady={handleEditorReady}
               />
             </div>
-            <div style={{ marginTop: 6, fontSize: 13, color: metaCount > metaCharLimit ? "crimson" : "#444" }}>
-              {metaCount} characters (recommended ≤ {metaCharLimit})
-            </div>
-            <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
-              Kalau kosong, sistem akan mengambil potongan konten sebagai fallback.
-            </div>
-          </div>
 
-          {/* ✅ Tombol Draft & Publish */}
-          <div className="post-btns" style={{ marginTop: 12 }}>
-            <button onClick={() => savePost("draft")} className="write-blog draft">
-              <i className="ri-edit-box-line"></i>
-              <span>Draft</span>
-            </button>
-            <button onClick={() => savePost("published")} className="publish">
-              Publish
-            </button>
-          </div>
-        </section>
+            {/* 🆕 Meta description mini editor */}
+            <div className="meta-description-box" style={{ marginTop: 12 }}>
+              <label style={{ display: "block", marginBottom: 6 }}>Meta Description (ditampilkan di card & meta tag):</label>
+              <div className="meta-editor-wrapper" style={{ border: "1px solid #ddd", borderRadius: 6, padding: 8 }}>
+                {/* Re-use WYSIWYGEditor as a mini box; it returns HTML but we strip tags when showing counts */}
+                <WYSIWYGEditor
+                  value={metaDescription}
+                  onChange={(newContent) => setMetaDescription(newContent)}
+                  onEditorReady={() => {}}
+                />
+              </div>
+              <div style={{ marginTop: 6, fontSize: 13, color: metaCount > metaCharLimit ? "crimson" : "#444" }}>
+                {metaCount} characters (recommended ≤ {metaCharLimit})
+              </div>
+              <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+                Kalau kosong, sistem akan mengambil potongan konten sebagai fallback.
+              </div>
+            </div>
+
+            {/* ✅ Tombol Draft & Publish */}
+            <div className="post-btns" style={{ marginTop: 12 }}>
+              <button onClick={() => savePost("draft")} className="write-blog draft">
+                <i className="ri-edit-box-line"></i>
+                <span>Draft</span>
+              </button>
+              <button onClick={() => savePost("published")} className="publish">
+                Publish
+              </button>
+            </div>
+          </section>
+        </div>
       </div>
-    </div>
+    </Suspense>
   );
 }
