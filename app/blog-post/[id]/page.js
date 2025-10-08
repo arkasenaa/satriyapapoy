@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
+import Head from "next/head";
 import "./styling.css";
 import "./responsive2.css";
 
@@ -89,8 +90,20 @@ export default function BlogPost() {
 
   if (!post) return <p>Loading...</p>;
 
+  // prepare meta description: gunakan meta_description bila tersedia, else potongan content
+  const metaDescription = (post.meta_description && post.meta_description.replace(/<[^>]+>/g, "").trim())
+    || (post.content ? post.content.replace(/<[^>]+>/g, "").split(" ").slice(0, 30).join(" ") + "..." : "");
+
   return (
     <>
+      <Head>
+        <title>{post.title} — Satriya Papoy</title>
+        <meta name="description" content={metaDescription} />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:image" content={post.cover_url || "/blog/grey.jpg"} />
+      </Head>
+
       {/* Header */}
       <header>
         <nav className="header_responsive">
@@ -187,9 +200,8 @@ export default function BlogPost() {
                 <div
                   className="excerpt"
                   dangerouslySetInnerHTML={{
-                    __html: item.content
-                      ? item.content.replace(/<[^>]+>/g, "").split(" ").slice(0, 20).join(" ") + "..."
-                      : "",
+                    __html: (item.meta_description && item.meta_description.replace(/<[^>]+>/g, "").split(" ").slice(0, 20).join(" ") + "...") ||
+                      (item.content ? item.content.replace(/<[^>]+>/g, "").split(" ").slice(0, 20).join(" ") + "..." : ""),
                   }}
                 />
               </div>
