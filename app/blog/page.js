@@ -54,6 +54,20 @@ export default function BlogPage() {
     .sort((a, b) => (b.views || 0) - (a.views || 0))
     .slice(0, 3);
 
+  // helper untuk excerpt: pakai meta_description jika tersedia, kalau tidak potong content
+  const getExcerpt = (post, charCount = 200) => {
+    if (!post) return "";
+    if (post.meta_description && post.meta_description.trim() !== "") {
+      // strip tags kalau ada
+      return post.meta_description.replace(/<[^>]+>/g, "").slice(0, charCount) + (post.meta_description.length > charCount ? "..." : "");
+    }
+    if (post.content) {
+      const plain = post.content.replace(/<[^>]+>/g, "");
+      return plain.slice(0, charCount) + (plain.length > charCount ? "..." : "");
+    }
+    return "";
+  };
+
   return (
     <>
       <Head>
@@ -125,9 +139,7 @@ export default function BlogPage() {
                       <div
                         className="excerpt"
                         dangerouslySetInnerHTML={{
-                          __html: post.content
-                            ? post.content.substring(0, 200) + "..."
-                            : "",
+                          __html: getExcerpt(post, 200),
                         }}
                       />
                     </div>
