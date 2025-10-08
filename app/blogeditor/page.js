@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef, Suspense } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import dynamicImport from "next/dynamic";
 import Link from "next/link";
 import "./blogeditor.css";
@@ -55,13 +55,22 @@ export default function BlogEditor() {
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [autodraftId, setAutodraftId] = useState(null);
 
+  // Ganti: ambil editId dari window.location.search (agar tidak memicu CSR-bailout selama build)
+  const [editId, setEditId] = useState(null);
+
   // 🆕 Counter untuk "Untitled Blog"
   const untitledCountRef = useRef(1);
 
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const editId = searchParams.get("id");
+
+  // Ambil query param "id" hanya di client setelah mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    setEditId(id);
+  }, []);
 
   // ✅ Update localKey saat editId berubah
   useEffect(() => {
@@ -82,7 +91,8 @@ export default function BlogEditor() {
   useEffect(() => {
     async function checkSession() {
       const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+      if (!data?.session) {
+        // redirect ke login, tetap sertakan redirect ke halaman saat ini
         router.push(`/login?redirect=${pathname}`);
       }
     }
