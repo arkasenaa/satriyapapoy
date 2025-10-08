@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef, Suspense } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 import Link from "next/link";
 import "./blogeditor.css";
 
@@ -10,7 +10,7 @@ import "./blogeditor.css";
 export const dynamic = "force-dynamic";
 
 // ✅ Dynamic import WYSIWYG (aman untuk SSR)
-const WYSIWYGEditor = dynamic(() => import("./components/wysiwygeditor"), {
+const WYSIWYGEditor = dynamicImport(() => import("./components/wysiwygeditor"), {
   ssr: false,
 });
 
