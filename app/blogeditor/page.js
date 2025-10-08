@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -38,20 +38,12 @@ async function uploadCover(file) {
   }
 }
 
-// ✅ Komponen utama dibungkus dalam SuspenseBoundary
-export default function BlogEditorPage() {
-  return (
-    <Suspense fallback={<div className="loading">Loading Editor...</div>}>
-      <BlogEditor />
-    </Suspense>
-  );
-}
-
-function BlogEditor() {
+export default function BlogEditor() {
   const [title, setTitle] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
   const [category, setCategory] = useState("Uncategorized");
   const [content, setContent] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
   const [drafts, setDrafts] = useState([]);
   const [selectedDraft, setSelectedDraft] = useState("");
   const [localKey, setLocalKey] = useState("blogeditor_autosave_new");
@@ -98,7 +90,7 @@ function BlogEditor() {
   async function loadDrafts() {
     const { data, error } = await supabase
       .from("posts")
-      .select("id, title, content, cover_url, category")
+      .select("id, title, content, cover_url, category, meta_description")
       .eq("status", "draft")
       .order("created_at", { ascending: false });
 
@@ -120,7 +112,7 @@ function BlogEditor() {
 
       const { data, error } = await supabase
         .from("posts")
-        .select("id, title, content, cover_url, category")
+        .select("id, title, content, cover_url, category, meta_description")
         .eq("id", editId)
         .single();
 
@@ -130,6 +122,7 @@ function BlogEditor() {
         setContent(data.content);
         setCategory(data.category || "Uncategorized");
         setCoverUrl(data.cover_url || "");
+        setMetaDescription(data.meta_description || "");
         setAutodraftId(data.id);
       }
       setIsPostLoaded(true);
@@ -142,10 +135,12 @@ function BlogEditor() {
     const id = e.target.value;
     setSelectedDraft(id);
 
+    // 🆕 Jika memilih "draft" kosong (kembali ke editor baru)
     if (id === "") {
       setTitle("");
       setCoverUrl("");
       setContent("");
+      setMetaDescription("");
       setAutodraftId(null);
       localStorage.removeItem(localKey);
       return;
@@ -154,29 +149,37 @@ function BlogEditor() {
     const draft = drafts.find((d) => d.id == id);
     if (draft) {
       localStorage.removeItem(localKey);
+      // 🆕 Reset isi editor saat draft dipilih
       setTitle("");
       setCoverUrl("");
       setCategory("Uncategorized");
       setContent("");
+      setMetaDescription("");
+      // 🕒 Delay untuk load data draft (agar terlihat "kosong dulu")
       setTimeout(() => {
         setTitle(draft.title);
         setContent(draft.content);
         setCategory(draft.category || "Uncategorized");
         setCoverUrl(draft.cover_url || "");
+        setMetaDescription(draft.meta_description || "");
         setAutodraftId(draft.id);
       }, 300);
     }
   }
 
-  // ✅ AUTOSAVE ke localStorage
+  // ✅ AUTOSAVE ke localStorage (termasuk metaDescription)
   useEffect(() => {
     const saveData = () => {
-      const data = { title, coverUrl, category, content };
-      localStorage.setItem(localKey, JSON.stringify(data));
+      const data = { title, coverUrl, category, content, metaDescription };
+      try {
+        localStorage.setItem(localKey, JSON.stringify(data));
+      } catch (err) {
+        console.error("Autosave failed:", err);
+      }
     };
     const intervalId = setInterval(saveData, 1000);
     return () => clearInterval(intervalId);
-  }, [title, coverUrl, category, content, localKey]);
+  }, [title, coverUrl, category, content, metaDescription, localKey]);
 
   // ✅ RESTORE autosave
   useEffect(() => {
@@ -186,7 +189,7 @@ function BlogEditor() {
         const saved = localStorage.getItem(localKey);
         if (saved) {
           const data = JSON.parse(saved);
-          const hasSignificantContent = data.title || data.content || data.coverUrl;
+          const hasSignificantContent = data.title || data.content || data.coverUrl || data.metaDescription;
           if (hasSignificantContent) {
             await new Promise((r) => setTimeout(r, 100));
             if (!editId) {
@@ -194,6 +197,7 @@ function BlogEditor() {
               setCoverUrl(data.coverUrl || "");
               setCategory(data.category || "Uncategorized");
               setContent(data.content || "");
+              setMetaDescription(data.metaDescription || "");
             } else {
               const shouldRestore = window.confirm(
                 "Kami menemukan editan yang belum disimpan. Mau memulihkannya?"
@@ -203,6 +207,7 @@ function BlogEditor() {
                 setCoverUrl(data.coverUrl || "");
                 setCategory(data.category || "Uncategorized");
                 setContent(data.content || "");
+                setMetaDescription(data.metaDescription || "");
               }
             }
           }
@@ -216,8 +221,10 @@ function BlogEditor() {
     restoreAutosave();
   }, [localKey, isPostLoaded, hasRestoredAutosave, editId]);
 
+  // ✅ Callback editor siap
   const handleEditorReady = () => setIsEditorReady(true);
 
+  // ✅ Upload cover segera saat file dipilih
   const handleCoverFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -225,7 +232,7 @@ function BlogEditor() {
     if (url) setCoverUrl(url);
   };
 
-  // ✅ AUTODRAFT ke database
+  // ✅ AUTODRAFT ke database (termasuk meta_description)
   async function saveDraftToDB() {
     try {
       const payload = {
@@ -234,6 +241,7 @@ function BlogEditor() {
         status: "draft",
         cover_url: coverUrl || "",
         category: category || "Uncategorized",
+        meta_description: metaDescription || "",
       };
 
       let error, data;
@@ -268,19 +276,22 @@ function BlogEditor() {
 
     let lastSavedTitle = "";
     let lastSavedContent = "";
+    let lastSavedMeta = "";
 
     const runAutodraft = async () => {
       const trimmedTitle = title.trim();
       const strippedContent = content.replace(/<[^>]*>/g, "").trim();
-      const hasMeaningfulContent = trimmedTitle.length > 0 || strippedContent.length > 0;
+      const strippedMeta = metaDescription.replace(/<[^>]*>/g, "").trim();
+      const hasMeaningfulContent = trimmedTitle.length > 0 || strippedContent.length > 0 || strippedMeta.length > 0;
       if (!hasMeaningfulContent) return;
 
-      if (trimmedTitle !== lastSavedTitle || strippedContent !== lastSavedContent) {
+      if (trimmedTitle !== lastSavedTitle || strippedContent !== lastSavedContent || strippedMeta !== lastSavedMeta) {
         const updatedId = await saveDraftToDB();
         if (updatedId) {
           await loadDrafts();
           lastSavedTitle = trimmedTitle;
           lastSavedContent = strippedContent;
+          lastSavedMeta = strippedMeta;
         }
       }
     };
@@ -292,13 +303,14 @@ function BlogEditor() {
     !!isPostLoaded,
     title || "",
     content || "",
+    metaDescription || "",
     coverUrl || "",
     category || "Uncategorized",
     autodraftId || "",
     editId || "",
   ]);
 
-  // ✅ Simpan post (draft/publish)
+  // ✅ Simpan post (draft/publish) (termasuk meta_description)
   async function savePost(status) {
     const targetIdToUse = editId || autodraftId || null;
 
@@ -312,11 +324,12 @@ function BlogEditor() {
           status,
           cover_url: coverUrl || "",
           category,
+          meta_description: metaDescription || "",
         })
         .eq("id", targetIdToUse));
     } else {
       ({ error } = await supabase.from("posts").insert([
-        { title, content, status, cover_url: coverUrl || "", category },
+        { title, content, status, cover_url: coverUrl || "", category, meta_description: metaDescription || "" },
       ]));
     }
 
@@ -333,19 +346,30 @@ function BlogEditor() {
     }
   }
 
+  // ✅ Reset editor dengan aman
   const handleWriteNew = () => {
     setTitle("");
     setCoverUrl("");
     setSelectedDraft("");
     setContent("");
+    setMetaDescription("");
     setAutodraftId(null);
     localStorage.removeItem(localKey);
+    // 🆕 increment untitled counter setiap kali blog baru
     untitledCountRef.current += 1;
     if (editId) router.push("/blogeditor");
   };
 
+  // 🆕 Tentukan label draft saat ini di navbar
   const currentDraftLabel =
-    title.trim() !== "" ? title.trim() : `Untitled Blog #${untitledCountRef.current}`;
+    title.trim() !== ""
+      ? title.trim()
+      : `Untitled Blog #${untitledCountRef.current}`;
+
+  // Meta description char limit for display (you can change)
+  const metaCharLimit = 160;
+  const metaPlain = metaDescription.replace(/<[^>]+>/g, "");
+  const metaCount = metaPlain.length;
 
   return (
     <div className="blog-editor-wrapper">
@@ -365,6 +389,7 @@ function BlogEditor() {
             </div>
 
             <div className="nav-right">
+              {/* 🆕 Draft dropdown sekarang menampilkan judul blog aktif */}
               <select id="drafts-dropdown" value={selectedDraft} onChange={handleDraftChange}>
                 <option value="">{currentDraftLabel}</option>
                 {drafts.map((draft) => (
@@ -417,6 +442,7 @@ function BlogEditor() {
             </select>
           </div>
 
+          {/* ✅ WYSIWYG Editor */}
           <div className="wysiwyg-editor">
             <WYSIWYGEditor
               value={content}
@@ -425,7 +451,27 @@ function BlogEditor() {
             />
           </div>
 
-          <div className="post-btns">
+          {/* 🆕 Meta description mini editor */}
+          <div className="meta-description-box" style={{ marginTop: 12 }}>
+            <label style={{ display: "block", marginBottom: 6 }}>Meta Description (ditampilkan di card & meta tag):</label>
+            <div className="meta-editor-wrapper" style={{ border: "1px solid #ddd", borderRadius: 6, padding: 8 }}>
+              {/* Re-use WYSIWYGEditor as a mini box; it returns HTML but we strip tags when showing counts */}
+              <WYSIWYGEditor
+                value={metaDescription}
+                onChange={(newContent) => setMetaDescription(newContent)}
+                onEditorReady={() => {}}
+              />
+            </div>
+            <div style={{ marginTop: 6, fontSize: 13, color: metaCount > metaCharLimit ? "crimson" : "#444" }}>
+              {metaCount} characters (recommended ≤ {metaCharLimit})
+            </div>
+            <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+              Kalau kosong, sistem akan mengambil potongan konten sebagai fallback.
+            </div>
+          </div>
+
+          {/* ✅ Tombol Draft & Publish */}
+          <div className="post-btns" style={{ marginTop: 12 }}>
             <button onClick={() => savePost("draft")} className="write-blog draft">
               <i className="ri-edit-box-line"></i>
               <span>Draft</span>
