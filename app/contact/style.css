@@ -97,9 +97,9 @@ h3 {
     align-items: center;
     justify-content: center;
     display: flex;
-    max-height: 671px;
     max-width: 1920px;
     flex: 1;
+	margin: 0 auto;
     height: 100%;
     padding: 34px 0px 34px 0px;
 }
