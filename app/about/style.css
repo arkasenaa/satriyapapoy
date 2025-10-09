@@ -69,7 +69,7 @@ footer {
     overflow-x: hidden;
     align-items: center;
     justify-content: center;
-    display: flex;
+	margin: 0 auto;
 }
 .content {
   display: flex;
