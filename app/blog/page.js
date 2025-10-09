@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import Head from "next/head";
 import Script from "next/script";
+import Link from "next/link";
 import "./blog.css";
 
 const supabase = createClient(
@@ -88,7 +89,9 @@ export default function BlogPage() {
         <nav className="header_responsive">
           <div className="header-contents">
             <div className="navbar-brand">
-              <img src="blog/satriyapapoy.png" />
+              <Link>
+                <img src="blog/satriyapapoy.png" />
+              </Link>
             </div>
             <div className="navbar-links">
               <a href="/blog">blog</a>
