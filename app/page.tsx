@@ -105,7 +105,7 @@ useEffect(() => {
               Based In Bekasi Kota, Our Products are crafted with utmost care
               100% organic cotton &amp; good vibes
             </p>
-            <a href="#" className="read-more-btn">
+            <a href="/relaxgoods" className="read-more-btn">
               Read More{" "}
               <i className="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
