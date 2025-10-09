@@ -76,10 +76,10 @@ export default function RelaxGoodsPage() {
               </p>
 
               <div className="footer-cards">
-                <img src="/grey.jpg" alt="grey" />
-                <img src="/grey.jpg" alt="grey" />
-                <img src="/grey.jpg" alt="grey" />
-                <img src="/grey.jpg" alt="grey" />
+                <img src="/grey2.jpg" alt="grey" />
+                <img src="/grey2.jpg" alt="grey" />
+                <img src="/grey2.jpg" alt="grey" />
+                <img src="/grey2.jpg" alt="grey" />
               </div>
 
               <p>
