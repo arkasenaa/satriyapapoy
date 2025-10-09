@@ -1,4 +1,5 @@
 
+
 import Script from "next/script";
 import "./style.css";
 import "./responsive.css";

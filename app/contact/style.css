@@ -53,10 +53,6 @@ h3 {
     margin: 0;
     line-height: 120%;
 }
-.container {
-    flex: 1;
-}
-
 #header{
     background-color: #F4F4F4;
 }
@@ -98,17 +94,18 @@ h3 {
     color: black;
 }
 .container {
-    padding: 64px 10px 64px 10px;
     align-items: center;
     justify-content: center;
-    width:100%;
-    max-width:1440px;
     display: flex;
+    max-height: 671px;
+    max-width: 1920px;
+    flex: 1;
+    height: 100%;
+    padding: 34px 0px 34px 0px;
 }
 
 .content-container {
-    max-width: 1440px;
-    width: 100%;
+    max-width: 1920px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -216,12 +213,11 @@ h3 {
 .footer-container{
 	display: flex;
     background-color: white;
-    height: 240px;
+    max-height: 240px;
     overflow-y: hidden;
     overflow-x: hidden;
 	justify-content: center;
 	align-items: center;
-	padding: 34px;
 }
 .footer-content{
 	height: fit-content;
