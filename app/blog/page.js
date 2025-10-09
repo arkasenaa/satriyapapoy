@@ -31,7 +31,7 @@ export default function BlogPage() {
         .eq("status", "published")
         .order("created_at", { ascending: false });
 
-      if (!error && data.length > 0) {
+      if (!error && data?.length > 0) {
         setPosts(data);
       }
       setLoading(false);
@@ -39,19 +39,7 @@ export default function BlogPage() {
     loadPosts();
   }, []);
 
-  // Dummy fallback
-  const dummyPosts = Array.from({ length: 12 }).map((_, i) => ({
-    id: i,
-    image_url: "/blog/grey.jpg",
-    category: "Digital Transformation",
-    created_at: "2023-04-20",
-    title: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    content:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. suspendisse pellentesque felis augue, a volutpat justo imperdiet non",
-    views: Math.floor(Math.random() * 100),
-  }));
-
-  const allPosts = posts.length > 0 ? posts : dummyPosts;
+  const allPosts = posts; // tidak pakai dummy lagi saat loading
 
   // Filter kategori
   const filteredPosts =
@@ -62,9 +50,23 @@ export default function BlogPage() {
         );
 
   // Popular posts (3 terbanyak berdasarkan views)
-  const popularPosts = [...allPosts]
+  const popularPosts = [...(allPosts || [])]
     .sort((a, b) => (b.views || 0) - (a.views || 0))
     .slice(0, 3);
+
+  // helper untuk excerpt: pakai meta_description jika tersedia, kalau tidak potong content
+  const getExcerpt = (post, charCount = 200) => {
+    if (!post) return "";
+    if (post.meta_description && post.meta_description.trim() !== "") {
+      // strip tags kalau ada
+      return post.meta_description.replace(/<[^>]+>/g, "").slice(0, charCount) + (post.meta_description.length > charCount ? "..." : "");
+    }
+    if (post.content) {
+      const plain = post.content.replace(/<[^>]+>/g, "");
+      return plain.slice(0, charCount) + (plain.length > charCount ? "..." : "");
+    }
+    return "";
+  };
 
   return (
     <>
@@ -106,17 +108,17 @@ export default function BlogPage() {
           <div className="main-content">
             {/* Blog list */}
             <div className="main-content-left">
-              {filteredPosts.map((post) => {
-                const isDummy = posts.length === 0;
-
-                return (
+              {loading ? (
+                <p className="loading-text">Loading...</p>
+              ) : filteredPosts.length === 0 ? (
+                <p className="no-posts">No published posts available.</p>
+              ) : (
+                filteredPosts.map((post) => (
                   <div
                     key={post.id}
-                    className={isDummy ? "Frame-33" : "blog-card"}
+                    className="blog-card"
                     onClick={() =>
-                      isDummy
-                        ? (window.location.href = `/blog-post`)
-                        : (window.location.href = `/blog-post/${post.id}`)
+                      (window.location.href = `/blog-post/${post.id}`)
                     }
                   >
                     <img
@@ -137,15 +139,13 @@ export default function BlogPage() {
                       <div
                         className="excerpt"
                         dangerouslySetInnerHTML={{
-                          __html: post.content
-                            ? post.content.substring(0, 200) + "..."
-                            : "",
+                          __html: getExcerpt(post, 200),
                         }}
                       />
                     </div>
                   </div>
-                );
-              })}
+                ))
+              )}
             </div>
 
             {/* Sidebar */}
@@ -197,9 +197,7 @@ export default function BlogPage() {
                       key={post.id}
                       className="Frame-48"
                       onClick={() =>
-                        posts.length === 0
-                          ? (window.location.href = `/blog-post`)
-                          : (window.location.href = `/blog-post/${post.id}`)
+                        (window.location.href = `/blog-post/${post.id}`)
                       }
                     >
                       <span className="tag">
@@ -246,3 +244,4 @@ export default function BlogPage() {
     </>
   );
 }
+

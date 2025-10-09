@@ -125,6 +125,12 @@ hr.solid {
     justify-content: center;
     display: flex;
 }
+.article-body {
+  max-width: 564px;
+  width: 100%;
+  word-wrap: break-word;    /* biar teks panjang dibungkus */
+  overflow-wrap: break-word;
+}
 .article-body img {
     max-width: 564px;   /* batas lebar maksimal */
     max-height: 318px;  /* batas tinggi maksimal */
@@ -133,6 +139,38 @@ hr.solid {
     display: block;
     margin: 20px auto;  /* center di tengah + jarak atas bawah */
     object-fit: cover;  /* kalau mau crop biar pas 564x318 */
+}
+.article-body .video-wrapper iframe,
+.article-body .video-wrapper video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+}
+.article-body .video-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 564px;
+  margin: 20px auto;
+  padding-bottom: 56.25%; /* 16:9 ratio (9/16 = 0.5625) */
+  height: 0;
+  overflow: hidden;
+}
+.article-body .video-wrapper iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.article-body video {
+  width: 100%;
+  max-width: 564px;
+  height: auto;
+  margin: 20px auto;
+  display: block;
 }
 small {
     font-size: 14px;
@@ -211,22 +249,38 @@ h4 {
 .Frame-33 img{
     width: 270px;
     height: 207px;
-    object-fit: fill;
+    object-fit: cover;
 }
-.Frame-33{
+.Frame-33 {
     background-color: #ffffff;
     width: 100%;
-    max-width: 270px;   /* batas lebar ideal */
+    max-width: 270px;
     min-width: 270px;
     height: auto;
     cursor: pointer;
     margin: 0 auto;
     transition: 0.1s;
+    display: flex;
+    flex-direction: column; /* agar image + description stack */
+    box-sizing: border-box; /* penting agar padding dihitung di dalam width */
 }
-.Frame-33 .description{
-	display: grid;
-    padding: 24px;
-	gap: 10px;
+.Frame-33 .description {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;           /* jarak dari pinggir card */
+    gap: 8px;
+    width: 100%;
+    overflow: hidden;         /* potong overflow */
+    box-sizing: border-box;   /* penting */
+}
+.Frame-33 .excerpt {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;   /* batasi 4 baris */
+    -webkit-box-orient: vertical;
+    word-wrap: break-word;
+    margin: 0;
 }
 .Frame-33 .tag{
     border-radius: 32px;
@@ -252,6 +306,10 @@ h4 {
 }
 .Frame-33:hover{
     box-shadow: 0 0 10px rgb(38, 24, 235);
+}
+.Frame-33 .description h4,
+.Frame-33 .description span {
+    margin: 0; 
 }
 .footer-container{
 	display: flex;

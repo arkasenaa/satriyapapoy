@@ -15,11 +15,12 @@ export default function BlogDashboard() {
   const [posts, setPosts] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkAction, setBulkAction] = useState("");
-
-  const [categories, setCategories] = useState([]);   // semua kategori
-  const [dates, setDates] = useState([]);             // semua tanggal unik
+  const [categories, setCategories] = useState([]);
+  const [dates, setDates] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("all"); // ✅ default sekarang "all"
+  const [searchTerm, setSearchTerm] = useState(""); // ✅ search state
 
   const router = useRouter();
   const pathname = usePathname();
@@ -37,59 +38,62 @@ export default function BlogDashboard() {
 
   // ✅ Fetch semua kategori & tanggal unik
   async function fetchFilters() {
-    // Ambil kategori unik
-    const { data: catData } = await supabase
-      .from("posts")
-      .select("category")
-      .eq("status", "published");
+    const { data: catData } = await supabase.from("posts").select("category");
 
     if (catData) {
       const uniqueCats = [...new Set(catData.map((p) => p.category).filter(Boolean))];
       setCategories(uniqueCats);
     }
 
-    // Ambil tanggal unik
-    const { data: dateData } = await supabase
-      .from("posts")
-      .select("created_at")
-      .eq("status", "published");
+    const { data: dateData } = await supabase.from("posts").select("created_at");
 
     if (dateData) {
       const uniqueDates = [
         ...new Set(
-          dateData.map((p) =>
-            new Date(p.created_at).toISOString().split("T")[0] // ambil YYYY-MM-DD
-          )
+          dateData.map((p) => new Date(p.created_at).toISOString().split("T")[0])
         ),
-      ].sort((a, b) => new Date(b) - new Date(a)); // urut terbaru dulu
+      ].sort((a, b) => new Date(b) - new Date(a));
       setDates(uniqueDates);
     }
   }
 
-  // ✅ Fetch posts (pakai filter jika ada)
+  // ✅ Fetch posts (pakai filter + search jika ada)
   async function fetchPosts() {
-    let query = supabase
-      .from("posts")
-      .select("*")
-      .eq("status", "published")
-      .order("created_at", { ascending: false });
+    let query = supabase.from("posts").select("*").order("created_at", { ascending: false });
+
+    if (selectedStatus !== "all") {
+      query = query.eq("status", selectedStatus);
+    }
 
     if (selectedCategory) {
       query = query.eq("category", selectedCategory);
     }
 
     if (selectedDate) {
-      // filter tanggal spesifik
       const start = new Date(selectedDate);
       start.setHours(0, 0, 0, 0);
       const end = new Date(selectedDate);
       end.setHours(23, 59, 59, 999);
-
       query = query.gte("created_at", start.toISOString()).lte("created_at", end.toISOString());
     }
 
     const { data, error } = await query;
-    if (!error && data) setPosts(data);
+    if (error) return console.error("Fetch error:", error);
+
+    let filtered = data || [];
+
+    // ✅ Filter berdasarkan pencarian (judul / isi / author)
+    if (searchTerm.trim() !== "") {
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          (p.title && p.title.toLowerCase().includes(lower)) ||
+          (p.content && p.content.toLowerCase().includes(lower)) ||
+          (p.author && p.author.toLowerCase().includes(lower))
+      );
+    }
+
+    setPosts(filtered);
   }
 
   // ambil data saat load pertama
@@ -101,7 +105,7 @@ export default function BlogDashboard() {
   // refetch posts jika filter berubah
   useEffect(() => {
     fetchPosts();
-  }, [selectedCategory, selectedDate]);
+  }, [selectedCategory, selectedDate, selectedStatus]);
 
   // ✅ Checkbox toggle
   function toggleSelect(id) {
@@ -145,10 +149,15 @@ export default function BlogDashboard() {
       </nav>
 
       <div className="container">
-        {/* Search Bar */}
+        {/* ✅ Search Bar */}
         <div className="search-container">
-          <input type="text" placeholder="Search Posts" />
-          <button>Search Posts</button>
+          <input
+            type="text"
+            placeholder="Search Posts"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button onClick={fetchPosts}>Search Posts</button>
         </div>
 
         {/* Actions Row */}
@@ -195,13 +204,23 @@ export default function BlogDashboard() {
             ))}
           </select>
 
+          {/* ✅ Dropdown status (default = All Status) */}
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+          >
+            <option value="all">All Status</option>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+          </select>
+
           <button onClick={fetchPosts}>Filter</button>
           <button className="new-post" onClick={() => router.push("/blogeditor")}>
             New Post
           </button>
         </div>
 
-        {/* Table */}
+        {/* ✅ Table */}
         <table>
           <thead>
             <tr>
@@ -220,12 +239,15 @@ export default function BlogDashboard() {
               <th>Category</th>
               <th>Author</th>
               <th>Date</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {posts.length === 0 ? (
               <tr>
-                <td colSpan={5}>Tidak ada post published.</td>
+                <td colSpan={6}>
+                  Tidak ada post ditemukan untuk pencarian atau filter yang diterapkan.
+                </td>
               </tr>
             ) : (
               posts.map((post) => (
@@ -249,6 +271,7 @@ export default function BlogDashboard() {
                       minute: "2-digit",
                     })}
                   </td>
+                  <td>{post.status || "-"}</td>
                 </tr>
               ))
             )}
