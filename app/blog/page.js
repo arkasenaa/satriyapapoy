@@ -89,7 +89,7 @@ export default function BlogPage() {
         <nav className="header_responsive">
           <div className="header-contents">
             <div className="navbar-brand">
-              <Link>
+              <Link href="/">
                 <img src="blog/satriyapapoy.png" />
               </Link>
             </div>
