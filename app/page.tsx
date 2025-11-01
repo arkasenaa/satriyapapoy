@@ -105,7 +105,7 @@ useEffect(() => {
               Based In Bekasi Kota, Our Products are crafted with utmost care
               100% organic cotton &amp; good vibes
             </p>
-            <a href="#" className="read-more-btn">
+            <a href="/relaxgoods" className="read-more-btn">
               Read More{" "}
               <i className="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
@@ -119,7 +119,7 @@ useEffect(() => {
               umum dengan pendengar yang didominasi oleh mahasiswa negeri,
               pekerja, dan perantau di Jakarta, dan Jawa Barat
             </p>
-            <a href="#" className="read-more-btn">
+            <a href="/podcastpojokkantin" className="read-more-btn">
               Read More{" "}
               <i className="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
@@ -133,7 +133,7 @@ useEffect(() => {
               karena banyaknya influencer palsu yang memanipulasi pengikut,
               like, dan komentar.
             </p>
-            <a href="#" className="read-more-btn">
+            <a href="/rateku" className="read-more-btn">
               Read More{" "}
               <i className="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
@@ -145,7 +145,7 @@ useEffect(() => {
             <p className="pBusinessDescription">
               Hambali Farm menyediakan hewan qurban unggul dengan harga terbaik
             </p>
-            <a href="#" className="read-more-btn">
+            <a href="/hambalifarm" className="read-more-btn">
               Read More{" "}
               <i className="fas fa-arrow-right" aria-hidden="true"></i>
             </a>

@@ -15,23 +15,16 @@ export const metadata = {
   description: "Relax Goods Co - 2018 / Fashion Industry",
 };
 
-export default async function RelaxGoodsPage() {
-
+export default async function RatekuPage() {
   const { data, error } = await supabase
     .from("pages")
     .select("*")
-    .eq("page_name", "relaxgoods")
+    .eq("page_name", "rateku")
     .single();
-
-  if (error) {
-    console.error("failed to import data from relaxgoods:", error)
-  }
-
-  const title = data?.title || "Relax Goods Co";
-  const subtitle = data?.subtitle || "2018 / Fashion Industry";
-  const contentHtml = data?.content || `
-  <p> Default content of relaxgoods co. please update via pageditor </p>`;
-
+    if (error) {
+      console.error("failed to load data from podcastpojokkantin:", error)
+    }
+    const contentHtml = data?.content || `<p> Default content of rateku please update via pageditor</p>`;
   return (
     <>
       {/* Load Font Awesome (client-side script) */}
@@ -63,15 +56,15 @@ export default async function RelaxGoodsPage() {
       <div className="page-wrapper">
         <div className="header-container">
           <div className="header-content">
-            <h1>{title}</h1>
-            <p>{subtitle}</p>
+            <h1>Rateku</h1>
+            <p></p>
           </div>
         </div>
 
         <main>
           <div className="main-container">
             <div className="main-content"
-            dangerouslySetInnerHTML={{__html: contentHtml }}
+            dangerouslySetInnerHTML={{__html: contentHtml}}
             />
           </div>
         </main>

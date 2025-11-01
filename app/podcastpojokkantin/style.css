@@ -4,13 +4,21 @@
     src: url('charter/webfonts/charter_regular-webfont.eot?#iefix') format('embedded-opentype'),
          url('charter/webfonts/charter_regular-webfont.woff') format('woff');
 }
-html, header, body, footer{
+html {
+    height: 100%;
     overflow-x: hidden;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-html, header, body{
+body{
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
     background-color: #F4F4F4;
 }
 #header{
@@ -94,6 +102,7 @@ h4 {
     text-align: center;
     max-height: 194px;
     gap: 24px;
+    flex-grow: 1;
     padding: 64px 34px 64px 34px;
     background-color: white;
 }
@@ -118,15 +127,16 @@ h4 {
     padding: 0px 34px 0px 34px;
     align-items: center;
     justify-content: center;
+    flex-grow: 1;
 }
 .main-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     max-width: 1372px;
-    width: 100%;
     height: 100%;
     min-height: 100px;
+    width: 100%;
     padding: 34px 34px;
     justify-content: center;
 }
@@ -206,12 +216,14 @@ h4 {
 .footer-container{
 	display: flex;
     background-color: white;
-    height: 240px;
+    height: auto;
+    min-height: 240px;
     overflow-y: hidden;
     overflow-x: hidden;
 	justify-content: center;
 	align-items: center;
 	padding: 34px;
+    margin-top: auto;
 }
 .footer-content{
 	height: fit-content;
@@ -244,4 +256,12 @@ h4 {
 }
 .lets-connect h2{
     margin: 0px;
+}
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+main {
+  flex-grow: 1;
 }

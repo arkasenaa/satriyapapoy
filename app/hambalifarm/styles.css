@@ -88,22 +88,11 @@ h4 {
     line-height: 120%;
 }
 .header-container{
-	display: flex;
+	display: grid;
     align-items: center;
     justify-content: center;
     text-align: center;
-    max-height: 194px;
-    gap: 24px;
-    padding: 64px 34px 64px 34px;
-    background-color: white;
-}
-.header-content{
-    max-width: 564px;
-    max-height: 66px;
-    width: 100%;
-    height: 100%;
-    text-align: left;
-    gap: 10px;
+	gap: 10px
 }
 .header-container h1{
 	font-family: 'myFont';
@@ -125,8 +114,6 @@ h4 {
     align-items: center;
     max-width: 1372px;
     width: 100%;
-    height: 100%;
-    min-height: 100px;
     padding: 34px 34px;
     justify-content: center;
 }
@@ -143,13 +130,6 @@ h4 {
     height: auto;
     padding: 0;
 	margin-bottom: 20px;
-    line-height: 1.6
-}
-.main-content img {
-  display: block;
-  margin: 30px 0; /* jarak vertikal antara teks dan gambar */
-  max-width: 100%;
-  height: auto;
 }
 .main-content-h2-2{
     width: 100%;

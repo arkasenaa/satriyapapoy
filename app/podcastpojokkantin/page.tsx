@@ -15,23 +15,17 @@ export const metadata = {
   description: "Relax Goods Co - 2018 / Fashion Industry",
 };
 
-export default async function RelaxGoodsPage() {
+export default async function PodcastPojokKantinPage() {
 
   const { data, error } = await supabase
     .from("pages")
     .select("*")
-    .eq("page_name", "relaxgoods")
+    .eq("page_name", "podcastpojokkantin")
     .single();
-
-  if (error) {
-    console.error("failed to import data from relaxgoods:", error)
-  }
-
-  const title = data?.title || "Relax Goods Co";
-  const subtitle = data?.subtitle || "2018 / Fashion Industry";
-  const contentHtml = data?.content || `
-  <p> Default content of relaxgoods co. please update via pageditor </p>`;
-
+    if (error) {
+      console.error("failed to load data from podcastpojokkantin:", error)
+    }
+    const contentHtml = data?.content || `<p> Default content of podcastpojokkantin please update via pageditor</p>`;
   return (
     <>
       {/* Load Font Awesome (client-side script) */}
@@ -63,17 +57,16 @@ export default async function RelaxGoodsPage() {
       <div className="page-wrapper">
         <div className="header-container">
           <div className="header-content">
-            <h1>{title}</h1>
-            <p>{subtitle}</p>
+            <h1>podcast pojok kantin</h1>
+            <p></p>
           </div>
         </div>
 
         <main>
           <div className="main-container">
             <div className="main-content"
-            dangerouslySetInnerHTML={{__html: contentHtml }}
-            />
-          </div>
+            dangerouslySetInnerHTML={{__html: contentHtml}}/>
+            </div>
         </main>
       </div>
 
@@ -85,7 +78,6 @@ export default async function RelaxGoodsPage() {
               <h2>Satriya Papoy —</h2>
               <p>satriyapapoy@gmail.com</p>
             </div>
-
             <div className="footer-links">
               <a href="/blog">blog</a>
               <a href="/about">about</a>
