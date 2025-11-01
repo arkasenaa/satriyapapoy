@@ -12,7 +12,14 @@ const supabase = createClient(
 export default function HomePage() {
 
   const [latestPosts, setLatestPosts] = useState<any[]>([]);
-
+  const [pages, setPages] = useState<any[]>([]);
+  const getLogo = (pageName: string) => {
+    const page = pages.find(
+      (p) => p.page_name.toLowerCase() === pageName.toLowerCase()
+    );
+    return page?.logo_url || "/grey2.jpg";
+  };
+ 
 useEffect(() => {
   const fetchLatest = async () => {
     const { data, error } = await supabase
@@ -29,7 +36,31 @@ useEffect(() => {
     }
   };
 
+  const fetchPages = async () => {
+    const { data, error } = await supabase
+      .from("pages")
+      .select("page_name, logo_url");
+    if (error) console.error("Error fetching pages:", error.message);
+    else setPages(data);
+  }
+
   fetchLatest();
+  fetchPages();
+
+  const channel = supabase
+    .channel("realtime:pages")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "pages"},
+      (payload) => {
+        console.log("change received!", payload);
+        fetchPages();
+      }
+    )
+    .subscribe ();
+    return () => {
+      supabase.removeChannel(channel);
+    }
 }, []);
 
   return (
@@ -99,7 +130,7 @@ useEffect(() => {
 
         <div className="container">
           <div className="card">
-            <img src="/Logo Relax Goods (2).jpg" className="icon" alt="" />
+            <img src={getLogo("relaxgoods")} className="icon" alt="" />
             <h3 className="h3BusinessName">Relax Goods Co</h3>
             <p className="pBusinessDescription">
               Based In Bekasi Kota, Our Products are crafted with utmost care
@@ -112,7 +143,7 @@ useEffect(() => {
           </div>
 
           <div className="card">
-            <img src="/Logo Podcast.jpg" className="icon" alt="" />
+            <img src={getLogo("podcastpojokkantin")} className="icon" alt="" />
             <h3 className="h3BusinessName">Podcast Pojok Kantin</h3>
             <p className="pBusinessDescription">
               Podcast komedi yang fokus membahas seputar keseharian masyarakat
@@ -126,7 +157,7 @@ useEffect(() => {
           </div>
 
           <div className="card">
-            <img src="/Logo Rateku (2).jpg" className="icon" alt="" />
+            <img src={getLogo("rateku")} className="icon" alt="" />
             <h3 className="h3BusinessName">Rateku</h3>
             <p className="pBusinessDescription">
               Influencer Marketing Platform. Pembuatan project ini didasari
@@ -140,7 +171,7 @@ useEffect(() => {
           </div>
 
           <div className="card">
-            <img src="/Hambali Logo.jpg" className="icon" alt="" />
+            <img src={getLogo("hambalifarm")} className="icon" alt="" />
             <h3 className="h3BusinessName">Hambali Farm</h3>
             <p className="pBusinessDescription">
               Hambali Farm menyediakan hewan qurban unggul dengan harga terbaik
