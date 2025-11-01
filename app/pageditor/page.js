@@ -141,9 +141,9 @@ export default function PageEditor() {
                 .update({
                     content: content,
                     logo_url: logoUrl,
-                    uploaded_at: new Date ()
+                    updated_at: new Date ()
                 })
-                .eq("id", selectedPage);
+                .eq("id", parseInt(selectedPage));
 
             if (error) {
                 console.error("Error saving:", error.message);
